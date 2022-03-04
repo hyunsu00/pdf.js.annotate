@@ -12,11 +12,39 @@
 			"webRoot": "${workspaceFolder}"
 		},
 		{
+			"name": "npm run build 디버그",
+			"type": "pwa-node",
+			"request": "launch",
+			"runtimeArgs": [
+				"run",
+				"build"
+			],
+			"runtimeExecutable": "npm",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+		},
+		{
 			"name": "./external/pdf.js/web/viewer.html 디버그",
 			"type": "pwa-chrome",
 			"request": "launch",
 			"url": "http://localhost:5510/external/pdf.js/web/viewer.html",
 			"webRoot": "${workspaceFolder}"
+		},
+		{
+			"name": "gulp generic 디버그",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/external/pdf.js/node_modules/gulp/bin/gulp.js",
+			"stopOnEntry": false,
+			"args": [
+				"generic"
+			],
+			"cwd": "${workspaceRoot}/external/pdf.js/",
+			"runtimeArgs": [
+				"--nolazy"
+			],
+			"console": "internalConsole",
 		}
 	]
 }
