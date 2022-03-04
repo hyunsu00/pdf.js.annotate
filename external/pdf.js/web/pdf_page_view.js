@@ -46,9 +46,10 @@ import {
   roundToDivide,
   TextLayerMode,
 } from "./ui_utils.js";
-import { compatibilityParams } from "./app_options.js";
+// eslint-disable-next-line sort-imports
+import { AppOptions, compatibilityParams } from "./app_options.js";
 import { NullL10n } from "./l10n_utils.js";
-import { AppOptions } from "./app_options.js";
+import { PDFViewerApplication } from "./app.js";
 
 /**
  * @typedef {Object} PDFPageViewOptions
@@ -610,7 +611,7 @@ class PDFPageView {
       svg.style.height = canvasWrapper.style.height;
 
       // == export default function render(svg, viewport, data)
-      const docId = "./compressed.tracemonkey-pldi-09.pdf";
+      const docId = PDFViewerApplication.baseUrl;
       let AnnotateRender = PDFAnnotateRender["default"];
       AnnotateRender.getAnnotations(docId, this.id).then(function (annotations) {
         AnnotateRender.render(svg, viewport, annotations)
