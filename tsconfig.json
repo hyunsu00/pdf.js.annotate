@@ -1,0 +1,20 @@
+{
+	// https://www.typescriptlang.org/tsconfig
+	// https://www.typescriptlang.org/tsconfig#compilerOptions
+	"compilerOptions": {
+		"target": "es6", // ECMAScript 대상 버전 지정: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017','ES2018' or 'ESNEXT'.
+		"module": "commonjs", // 모듈 코드 생성 지정: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'.
+		"sourceMap": true, // 해당 '.map' 파일을 생성 여부.
+		"declaration": true, // 해당 '.d.ts' 파일을 생성 여부.
+		"outDir": "./build", // 컴파일시 .js 출력 디렉터리 설정
+		"strict": true // 모든 엄격한 유형 검사 옵션을 활성화 여부
+	},
+	// https://www.typescriptlang.org/tsconfig#include
+	"include": [
+		"external/pdfAnnotate/src"
+	],
+	// https://www.typescriptlang.org/tsconfig#exclude
+	"exclude": [
+		"node_modules"
+	]
+}
