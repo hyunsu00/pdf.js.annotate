@@ -5,6 +5,13 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "index.html 디버그",
+			"request": "launch",
+			"type": "pwa-chrome",
+			"url": "http://localhost:5510/index.html",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
 			"name": "./external/pdf.js/web/viewer.html 디버그",
 			"type": "pwa-chrome",
 			"request": "launch",

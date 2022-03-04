@@ -1,0 +1,36 @@
+/* viewer.js 덮어쓰기 */
+/* .toolbar {
+  display: none !important;
+}
+
+#sidebarContainer {
+  position: absolute;
+  top: 0px;
+  border-top: none;
+}
+
+#viewerContainer {
+  top: 0;
+} */
+
+/* main.css */
+.wrap {
+  /* overflow: hidden; */
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-toolbar {
+  text-align: center;
+}
+
+/* pdf-annotate.js */
+.annotationLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
