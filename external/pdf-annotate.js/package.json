@@ -1,0 +1,74 @@
+{
+  "name": "@submitty/pdf-annotate.js",
+  "version": "2.2.2",
+  "description": "Annotation layer for pdf.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "karma start --single-run",
+    "start": "./scripts/web",
+    "lint": "./node_modules/.bin/eslint .",
+    "startindocker": "./scripts/web-docker",
+    "build": "webpack && MINIFY=1 webpack",
+    "codecov": "codecov",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Submitty/pdf-annotate.js.git"
+  },
+  "keywords": [
+    "pdf",
+    "annotation"
+  ],
+  "author": "Matt Zabriskie",
+  "contributors": [
+    {
+      "name": "Victor Nazzaro"
+    },
+    {
+      "name": "Matthew Peveler",
+      "email": "matt.peveler@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Submitty/pdf-annotate.js/issues"
+  },
+  "homepage": "https://github.com/Submitty/pdf-annotate.js#readme",
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "chai": "^4.2.0",
+    "codecov": "^3.5.0",
+    "eslint": "^6.0.1",
+    "istanbul-instrumenter-loader": "^3.0.1",
+    "karma": "^5.0.1",
+    "karma-chrome-launcher": "^3.0.0",
+    "karma-cli": "^2.0.0",
+    "karma-coverage-istanbul-reporter": "^2.0.5",
+    "karma-firefox-launcher": "^1.3.0",
+    "karma-mocha": "^2.0.0",
+    "karma-sinon-chai": "^2.0.2",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-webpack": "^4.0.2",
+    "mocha": "^7.1.0",
+    "pdfjs-dist": "2.4.456",
+    "sinon": "^9.0.2",
+    "sinon-chai": "^3.3.0",
+    "terser-webpack-plugin": "^2.3.5",
+    "webpack": "^4.34.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.7.2"
+  },
+  "dependencies": {},
+  "files": [
+    "dist",
+    "src",
+    "index.js",
+    "LICENSE.md",
+    "README.md",
+    "webpack.config.js"
+  ]
+}
