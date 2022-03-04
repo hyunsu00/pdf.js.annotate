@@ -6,6 +6,7 @@ import("./external/pdf.js/web/viewer.js").then(() => {
   PDFViewerApplicationOptions.set("standardFontDataUrl", "/external/pdf.js/external/standard_fonts/");
   PDFViewerApplicationOptions.set("workerSrc", "/external/pdf.js/src/worker_loader.js");
   PDFViewerApplicationOptions.set("sandboxBundleSrc", "/external/pdf.js/src/pdf.sandbox.js");
+  PDFViewerApplicationOptions.set("pdf-annotate.js", true);
 });
 import "./lib/pdf-annotate-render.js";
 import "./lib/pdf-annotate-writer.js";

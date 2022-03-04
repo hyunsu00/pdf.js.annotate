@@ -48,6 +48,7 @@ import {
 } from "./ui_utils.js";
 import { compatibilityParams } from "./app_options.js";
 import { NullL10n } from "./l10n_utils.js";
+import { AppOptions } from "./app_options.js";
 
 /**
  * @typedef {Object} PDFPageViewOptions
@@ -589,7 +590,7 @@ class PDFPageView {
       div.appendChild(canvasWrapper);
     }
 
-    {
+    if (AppOptions.get("pdf-annotate.js")) {
       // svg 생성
       // == export function createPage(pageNumber)
       // let svg = document.createElement('svg');
