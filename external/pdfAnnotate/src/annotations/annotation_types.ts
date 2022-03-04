@@ -131,12 +131,14 @@ export class BaseAnnotationObj implements BaseAnnotation {
         ret = ret.concat(WriterUtil.writeNumberArray(this.rect))
         ret.push(WriterUtil.SPACE)
 
-        ret = ret.concat(WriterUtil.CONTENTS)
-        ret.push(WriterUtil.SPACE)
-        ret.push(WriterUtil.BRACKET_START)
-        ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(new Uint8Array(Util.convertStringToAscii(this.contents)), this.object_id))))
-        ret.push(WriterUtil.BRACKET_END)
-        ret.push(WriterUtil.SPACE)
+        if (this.contents != null) {
+            ret = ret.concat(WriterUtil.CONTENTS)
+            ret.push(WriterUtil.SPACE)
+            ret.push(WriterUtil.BRACKET_START)
+            ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(new Uint8Array(Util.convertStringToAscii(this.contents)), this.object_id))))
+            ret.push(WriterUtil.BRACKET_END)
+            ret.push(WriterUtil.SPACE)
+        }
 
         ret = ret.concat(WriterUtil.ID)
         ret.push(WriterUtil.SPACE)
@@ -465,12 +467,14 @@ export class MarkupAnnotationObj extends BaseAnnotationObj implements MarkupAnno
     public writeAnnotationObject(cryptoInterface : CryptoInterface) : number[] {
         let ret : number[] = super.writeAnnotationObject(cryptoInterface)
 
-        ret = ret.concat(WriterUtil.AUTHOR)
-        ret.push(WriterUtil.SPACE)
-        ret.push(WriterUtil.BRACKET_START)
-        ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(new Uint8Array(Util.convertStringToAscii(this.author)), this.object_id))))
-        ret.push(WriterUtil.BRACKET_END)
-        ret.push(WriterUtil.SPACE)
+        if (this.author != null) {
+            ret = ret.concat(WriterUtil.AUTHOR)
+            ret.push(WriterUtil.SPACE)
+            ret.push(WriterUtil.BRACKET_START)
+            ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(new Uint8Array(Util.convertStringToAscii(this.author)), this.object_id))))
+            ret.push(WriterUtil.BRACKET_END)
+            ret.push(WriterUtil.SPACE)
+        }
 
         if (this.opacity) {
             ret = ret.concat(WriterUtil.OPACITY)

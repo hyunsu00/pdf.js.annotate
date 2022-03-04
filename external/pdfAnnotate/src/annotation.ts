@@ -26,14 +26,16 @@ export class ParameterParser {
             ret_val.rect = values[i++]
 
             ret_val.contents = values[i++]
-            if(typeof ret_val.contents !== 'string') {
-                throw Error("Invalid contents parameter")
-            }
+            // INFO : Contents 가 없는 경우도 존재 (null 처리 - 저장시 null 체크 수정함)
+            // if(typeof ret_val.contents !== 'string') {
+            //     throw Error("Invalid contents parameter")
+            // }
 
             ret_val.author = values[i++]
-            if(typeof ret_val.author !== 'string') {
-                throw Error("Invalid author parameter")
-            }
+            // INFO : Author 가 없는 경우도 존재 (null 처리 - 저장시 null 체크 수정함)
+            // if(typeof ret_val.author !== 'string') {
+            //     throw Error("Invalid author parameter")
+            // }
 
             if (i >= values.length) return ret_val
 
