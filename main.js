@@ -1,4 +1,5 @@
 import { PixelsPerInch } from "pdfjs-lib";
+import { PDFViewerApplication } from './external/pdf.js/web/app.js';
 import { DEFAULT_SCALE } from "./external/pdf.js/web/ui_utils.js";
 import("./external/pdf.js/web/viewer.js").then(() => {
   PDFViewerApplicationOptions.set("disablePreferences", true);
@@ -8,7 +9,7 @@ import("./external/pdf.js/web/viewer.js").then(() => {
   PDFViewerApplicationOptions.set("standardFontDataUrl", "/external/pdf.js/external/standard_fonts/");
   PDFViewerApplicationOptions.set("workerSrc", "/external/pdf.js/src/worker_loader.js");
   PDFViewerApplicationOptions.set("sandboxBundleSrc", "/external/pdf.js/src/pdf.sandbox.js");
-  PDFViewerApplicationOptions.set("pdf-annotate.js", true);
+  PDFViewerApplicationOptions.set("pdf-annotate-render", webViewerAnnotateRender);
 });
 import "./lib/pdf-annotate-render.js";
 import "./lib/pdf-annotate-writer.js";
@@ -16,6 +17,28 @@ import "./lib/pdf-annotate-writer.js";
 let AnnotateRender = PDFAnnotateRender["default"];
 const UI = AnnotateRender.UI;
 AnnotateRender.setStoreAdapter(new AnnotateRender.LocalStoreAdapter());
+
+function webViewerAnnotateRender({ parentNode, canvasWrapper, id, pdfPage, scale }) {
+  let temp_div = document.createElement('div');
+  temp_div.innerHTML = "<svg class=\"annotationLayer\"></svg>";
+  let svg = temp_div.firstChild;
+  parentNode.appendChild(svg);
+
+  // svg 렌더링
+  // == function scalePage(pageNumber, viewport, context)
+  const viewport = pdfPage.getViewport({scale: scale});
+  svg.setAttribute('width', viewport.width);
+  svg.setAttribute('height', viewport.height);
+  svg.style.width = canvasWrapper.style.width;
+  svg.style.height = canvasWrapper.style.height;
+
+  // == export default function render(svg, viewport, data)
+  const docId = PDFViewerApplication.baseUrl;
+  let AnnotateRender = PDFAnnotateRender["default"];
+  AnnotateRender.getAnnotations(docId, id).then(function (annotations) {
+    AnnotateRender.render(svg, viewport, annotations)
+  });
+}
 
 let toolType = undefined;
 function setActiveToolbarItem(type) {

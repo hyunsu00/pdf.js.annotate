@@ -1933,6 +1933,11 @@ const PDFViewerApplication = {
       eventBus._on("fileinputchange", webViewerFileInputChange);
       eventBus._on("openfile", webViewerOpenFile);
     }
+
+    // hyunsu00 - pdf-annotate-render 코드 추가
+    if (AppOptions.get("pdf-annotate-render")) {
+      eventBus._on("pdf-annotate-render", AppOptions.get("pdf-annotate-render"));
+    }
   },
 
   bindWindowEvents() {
@@ -2031,6 +2036,11 @@ const PDFViewerApplication = {
 
     _boundEvents.beforePrint = null;
     _boundEvents.afterPrint = null;
+
+    // hyunsu00 - pdf-annotate-render 코드 추가
+    if (AppOptions.get("pdf-annotate-render")) {
+      eventBus._off("pdf-annotate-render", AppOptions.get("pdf-annotate-render"));
+    }
   },
 
   unbindWindowEvents() {

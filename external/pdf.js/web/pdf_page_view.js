@@ -46,10 +46,8 @@ import {
   roundToDivide,
   TextLayerMode,
 } from "./ui_utils.js";
-// eslint-disable-next-line sort-imports
-import { AppOptions, compatibilityParams } from "./app_options.js";
+import { compatibilityParams } from "./app_options.js";
 import { NullL10n } from "./l10n_utils.js";
-import { PDFViewerApplication } from "./app.js";
 
 /**
  * @typedef {Object} PDFPageViewOptions
@@ -591,33 +589,16 @@ class PDFPageView {
       div.appendChild(canvasWrapper);
     }
 
-    if (AppOptions.get("pdf-annotate.js")) {
-      // svg 생성
-      // == export function createPage(pageNumber)
-      // let svg = document.createElement('svg');
-      // svg.className = "annotationLayer";
-      // div.appendChild(svg);
-      let temp_div = document.createElement('div');
-      temp_div.innerHTML = "<svg class=\"annotationLayer\"></svg>";
-      let svg = temp_div.firstChild;
-      div.appendChild(svg);
+    // hyunsu00 - pdf-annotate-render 코드 추가
+    this.eventBus.dispatch("pdf-annotate-render", {
+      source: this,
+      parentNode: this.div,
+      canvasWrapper,
+      id: this.id,
+      pdfPage: this.pdfPage,
+      scale: this.scale,
+    });
 
-      // svg 렌더링
-      // == function scalePage(pageNumber, viewport, context)
-      const viewport = pdfPage.getViewport({scale: this.scale});
-      svg.setAttribute('width', viewport.width);
-      svg.setAttribute('height', viewport.height);
-      svg.style.width = canvasWrapper.style.width;
-      svg.style.height = canvasWrapper.style.height;
-
-      // == export default function render(svg, viewport, data)
-      const docId = PDFViewerApplication.baseUrl;
-      let AnnotateRender = PDFAnnotateRender["default"];
-      AnnotateRender.getAnnotations(docId, this.id).then(function (annotations) {
-        AnnotateRender.render(svg, viewport, annotations)
-      });
-    }
-    
     let textLayer = null;
     if (this.textLayerMode !== TextLayerMode.DISABLE && this.textLayerFactory) {
       const textLayerDiv = document.createElement("div");
