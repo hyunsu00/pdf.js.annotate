@@ -216,15 +216,15 @@ document.getElementById("underline").addEventListener("click", (e) => {
 // 다운로드
 document.getElementById("download").addEventListener("click", (e) => {
   console.log("click download");
-  saveAnnotation(PDFViewerApplication.baseUrl, PDFViewerApplication.pdfDocument)
-    .then(pdfAnnotateWriter => pdfAnnotateWriter.download());
+  writeAnnotation(PDFViewerApplication.baseUrl, PDFViewerApplication.pdfDocument)
+    .then(writer => writer.download());
 });
 
-async function saveAnnotation(docId, pdfDocument) {
+async function writeAnnotation(docId, pdfDocument) {
   // low data를 얻어온다.
   let data = await pdfDocument.getData();
-  
-  let pdfAnnotateWriter = new PDFAnnotateWriter.AnnotationFactory(data);
+
+  let writer = new PDFAnnotateWriter.AnnotationFactory(data);
   const pagesCount = PDFViewerApplication.pagesCount;
   for (let i = 1; i <= pagesCount; i++) {
     // page를 얻어온다.
@@ -240,69 +240,97 @@ async function saveAnnotation(docId, pdfDocument) {
       let annotation = annotations.annotations[j];
       let pageIndex = annotations.pageNumber - 1;
       if (annotation.type == "area") {
-        let x_y = [annotation.x * scaleX, height - annotation.y * scaleY];
-        let coordinates = [x_y[0], x_y[1], x_y[0] + annotation.width * scaleX, x_y[1] - annotation.height * scaleY];
-        pdfAnnotateWriter.createSquareAnnotation(pageIndex, coordinates.slice(), null, null);
+        const left = annotation.x * scaleX;
+        const top = height - (annotation.y * scaleY);
+        const right = left + (annotation.width * scaleX);
+        const bottom = top - (annotation.height * scaleY);
+        const value = {
+          page: pageIndex,
+          rect: [left, top, right, bottom],
+          color: {r:255, g:0, b:0}
+        };
+        writer.createSquareAnnotation(value);
       } else if (annotation.type == "highlight") {
         for (let k = 0; k < annotation.rectangles.length; k++) {
-          let annotationX = annotation.rectangles[k].x;
-          let annotationY = annotation.rectangles[k].y;
-          let annotationWidth = annotation.rectangles[k].width;
-          let annotationHeight = annotation.rectangles[k].height;
-          let x_y = [annotationX * scaleX, height - annotationY * scaleY];
-          let coordinates = [x_y[0], x_y[1], x_y[0] + annotationWidth * scaleX, x_y[1] - annotationHeight * scaleY];
-          pdfAnnotateWriter.createHighlightAnnotation(pageIndex, coordinates.slice(), null, null);
+          const rect = annotation.rectangles[k];
+          const left = rect.x * scaleX;
+          const top = height - (rect.y * scaleY);
+          const right = left + (rect.width * scaleX);
+          const bottom = top - (rect.height * scaleY);
+          const value = {
+            page: pageIndex,
+            rect: [left, top, right, bottom],
+            color: {r:1, g:1, b:0}
+          };
+          writer.createHighlightAnnotation(value);
         }
       } else if (annotation.type == "drawing") {
-        let coordinates = [];
+        let points = [];
         for (let k = 0; k < annotation.lines.length; k++) {
-          coordinates.push(Number(annotation.lines[k][0]) * scaleX);
-          coordinates.push(height - Number(annotation.lines[k][1]) * scaleY);
+          let line = annotation.lines[k];
+          let x = Number(line[0]), y = Number(line[1]);
+          points.push(x * scaleX);
+          points.push(height - (y * scaleY));
         }
-        pdfAnnotateWriter.createPolyLineAnnotation(
-          pageIndex, coordinates.slice(0, 4), null, null, coordinates.slice(4, coordinates.length), {
-          r: 0,
-          g: 0,
-          b: 0,
-        });
+        const value = {
+          page: pageIndex,
+          rect: [0, 0, width, height],
+          inkList: points,
+          color: {r:255, g:0, b:0}
+        };
+        writer.createInkAnnotation(value);
       } else if (annotation.type == "strikeout") {
         for (let k = 0; k < annotation.rectangles.length; k++) {
-          let annotationX = annotation.rectangles[k].x;
-          let annotationY = annotation.rectangles[k].y - (annotation.rectangles[k].height / 2);
-          let annotationWidth = annotation.rectangles[k].width;
-          let annotationHeight = annotation.rectangles[k].height;
-          let x_y = [annotationX * scaleX, height - annotationY * scaleY];
-          let coordinates = [x_y[0], x_y[1], x_y[0] + annotationWidth * scaleX, x_y[1] - annotationHeight * scaleY];
-          pdfAnnotateWriter.createStrikeOutAnnotation(pageIndex, coordinates, null, null, { r: 255, g: 0, b: 0 });
+          const rect = annotation.rectangles[k];
+          const left = rect.x * scaleX;
+          const top = height - ((rect.y - (rect.height / 2)) * scaleY);
+          const right = left + (rect.width * scaleX);
+          const bottom = top - (rect.height * scaleY);
+          const value = {
+            page: pageIndex,
+            rect: [left, top, right, bottom],
+            color: {r:255, g:0, b:0}
+          };
+          writer.createStrikeOutAnnotation(value);
         }
-      } else if (annotation.type == "textbox") {
-        // !!! 텍스트의 rect 영역을 구해야만 정확한 저장을 완료할수 있다.
-        let x_y = [annotation.x * scaleX, height - annotation.y * scaleY];
-        const textWidth = 500;
-        const textHeight = 80;
-        let ta = pdfAnnotateWriter.createFreeTextAnnotation({
-          page: pageIndex,
-          rect: [x_y[0], x_y[1], x_y[0] + textWidth * scaleX, x_y[1] + (textHeight * scaleY)],
-          contents: annotation.content,
-          color: {r: 255, g: 255, b: 255},
-          textColor: {r: 128, g: 128, b: 128},
-          fontSize: annotation.size
-        });
-        ta.createDefaultAppearanceStream();
       } else if (annotation.type == "point") {
-        let x_y = [annotation.x * scaleX, height - annotation.y * scaleY];
+        let comments = await AnnotateRender.getStoreAdapter().getComments(docId, annotation.uuid);
+        const comment = comments[0];
         const iconSize = 25;
-        let comment = await AnnotateRender.getStoreAdapter().getComments(docId, annotation.uuid);
-        pdfAnnotateWriter.createTextAnnotation({
+        const left = annotation.x * scaleX;
+        const bottom = height - (annotation.y * scaleY);
+        const right = left + (iconSize * scaleX);
+        const top = bottom - (iconSize * scaleY);
+        const value = {
           page: pageIndex,
-          rect: [x_y[0], x_y[1] - (iconSize * scaleY), x_y[0] + iconSize * scaleX, x_y[1]],
-          contents: comment[0].content,
+          rect: [left, top, right, bottom],
+          contents: comment.content,
           open: false,
           icon: 0, // == AnnotationIcon.Comment,
+        };
+        writer.createTextAnnotation(value);
+      } else if (annotation.type == "textbox") {       
+        // !!! 텍스트의 rect 영역을 구해야만 정확한 저장을 완료할수 있다.
+        const contents = annotation.content;
+        const fontSize = annotation.size;
+        const textWidth = 500;
+        const textHeight = 80;
+        const left = annotation.x * scaleX;
+        const top = height - (annotation.y * scaleY);
+        const right = left + (textWidth * scaleX);
+        const bottom = top + (textHeight * scaleY);
+        let ta = writer.createFreeTextAnnotation({
+          page: pageIndex,
+          rect: [left, top, right, bottom],
+          contents: contents,
+          color: {r: 255, g: 255, b: 255},
+          textColor: {r: 128, g: 128, b: 128},
+          fontSize: fontSize
         });
-      }
+        ta.createDefaultAppearanceStream(); 
+      } 
     }
   }
 
-  return pdfAnnotateWriter;
+  return writer;
 }
