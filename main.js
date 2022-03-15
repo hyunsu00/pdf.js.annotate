@@ -311,26 +311,100 @@ async function writeAnnotation(docId, pdfDocument) {
         writer.createTextAnnotation(value);
       } else if (annotation.type == "textbox") {       
         // !!! 텍스트의 rect 영역을 구해야만 정확한 저장을 완료할수 있다.
-        const contents = annotation.content;
         const fontSize = annotation.size;
-        const textWidth = 500;
-        const textHeight = 80;
-        const left = annotation.x * scaleX;
-        const top = height - (annotation.y * scaleY);
-        const right = left + (textWidth * scaleX);
-        const bottom = top + (textHeight * scaleY);
+        const textSize = measureText(annotation.content, fontSize);
+        const contents = annotation.content;
+        // const textColor = annotation.color;
+        const left = (annotation.x * scaleX);
+        const top = height - (annotation.y * scaleY) + Math.floor((textSize.height - fontSize) / 2 * scaleY);
+        const right = left + Math.ceil(textSize.width * scaleX); 
+        const bottom = top + (fontSize * scaleY);
         let ta = writer.createFreeTextAnnotation({
           page: pageIndex,
           rect: [left, top, right, bottom],
           contents: contents,
-          color: {r: 255, g: 255, b: 255},
-          textColor: {r: 128, g: 128, b: 128},
-          fontSize: fontSize
+          color: {r: 1, g: 1, b: 0},
+          textColor: {r:255, g:0, b:0},
+          fontSize: fontSize * scaleY
         });
         ta.createDefaultAppearanceStream(); 
+
+        getSVGTextSize(page, annotation);
+
+        
       } 
     }
   }
 
   return writer;
+}
+
+function getSVGTextSize(page, annotation) {
+/*  
+  let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', annotation.x);
+  text.setAttribute('y', annotation.y);
+  text.setAttribute('fill', annotation.color);
+  text.setAttribute('fontSize', annotation.size);
+  text.setAttribute('transform', `rotate(${annotation.rotation})`);
+  text.setAttribute('style', 'white-space: pre');
+  text.innerHTML = annotation.content;
+  let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('transform', 'scale(1) rotate(0) translate(0, 0)');
+  g.appendChild(text);
+
+  let viewport = page.getViewport({scale: DEFAULT_SCALE});
+  let styleViewport = page.getViewport({scale: DEFAULT_SCALE * PixelsPerInch.PDF_TO_CSS_UNITS});
+  let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', viewport.width);
+  svg.setAttribute('height', viewport.height);
+  svg.style.width = `${styleViewport.width}px`;
+  svg.style.height = `${styleViewport.height}px`;
+  svg.appendChild(g);
+*/
+  let temp_div = document.createElement('div');
+  temp_div.innerHTML = 
+  `<svg width="612" height="792" style="width: 816px; height: 1056px;"><g transform="scale(1) rotate(0) translate(0, 0)"><text x="0" y="1056" fill="#E71F63" font-size="48" transform="rotate(0)" style="white-space: pre">123456789</text></g></svg>`;
+  let svg = temp_div.firstChild;
+  let g = svg.firstChild;
+  let text = g.firstChild;
+
+  document.body.appendChild(svg);
+
+  let boundingClientRect = text.getBoundingClientRect();
+  let bbox = text.getBBox();
+  let fontSize = window.getComputedStyle(text).fontSize;
+
+  console.log("annotation : ", annotation);
+  console.log("boundingClientRect : ", boundingClientRect);
+  console.log("bbox : ", bbox);
+  console.log("fontSize : ", fontSize);
+
+  document.body.removeChild(svg);
+}
+
+function measureText(pText, pFontSize, pStyle) {
+  var lDiv = document.createElement('div');
+
+  document.body.appendChild(lDiv);
+
+  if (pStyle != null) {
+      lDiv.style = pStyle;
+  }
+  lDiv.style.fontSize = "" + pFontSize + "px";
+  lDiv.style.position = "absolute";
+  lDiv.style.left = -1000;
+  lDiv.style.top = -1000;
+
+  lDiv.textContent = pText;
+
+  var lResult = {
+      width: lDiv.clientWidth,
+      height: lDiv.clientHeight
+  };
+
+  document.body.removeChild(lDiv);
+  lDiv = null;
+
+  return lResult;
 }
