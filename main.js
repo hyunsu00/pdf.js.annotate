@@ -309,78 +309,36 @@ async function writeAnnotation(docId, pdfDocument) {
           icon: 0, // == AnnotationIcon.Comment,
         };
         writer.createTextAnnotation(value);
-      } else if (annotation.type == "textbox") {       
-        // !!! 텍스트의 rect 영역을 구해야만 정확한 저장을 완료할수 있다.
+      } else if (annotation.type == "textbox") {    
+        const magicWidth = 2;
+        let _x = 0;
+        let _y = 993;
+        let _width = 236.5078125;
+        let _height = 54;
         const fontSize = annotation.size;
         const textSize = measureText(annotation.content, fontSize);
         const contents = annotation.content;
-        // const textColor = annotation.color;
-        const left = (annotation.x * scaleX);
-        const top = height - (annotation.y * scaleY) + Math.floor((textSize.height - fontSize) / 2 * scaleY);
-        const right = left + Math.ceil(textSize.width * scaleX); 
-        const bottom = top + (fontSize * scaleY);
+        const textColor = hexToRgb(annotation.color);
+        const left = Math.floor(_x * scaleX);
+        const top = height - Math.floor((_y + _height) * scaleY);
+        const right = left + Math.floor(_width * scaleX); 
+        const bottom = top + Math.floor(_height);
         let ta = writer.createFreeTextAnnotation({
           page: pageIndex,
           rect: [left, top, right, bottom],
           contents: contents,
           color: {r: 1, g: 1, b: 0},
-          textColor: {r:255, g:0, b:0},
-          fontSize: fontSize * scaleY
+          textColor: textColor,
+          fontSize: Math.floor(fontSize * scaleY),
+          opacity: 0.5,
+          font: "Helvetica"
         });
-        ta.createDefaultAppearanceStream(); 
-
-        getSVGTextSize(page, annotation);
-
-        
+        ta.createDefaultAppearanceStream();  
       } 
     }
   }
 
   return writer;
-}
-
-function getSVGTextSize(page, annotation) {
-/*  
-  let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  text.setAttribute('x', annotation.x);
-  text.setAttribute('y', annotation.y);
-  text.setAttribute('fill', annotation.color);
-  text.setAttribute('fontSize', annotation.size);
-  text.setAttribute('transform', `rotate(${annotation.rotation})`);
-  text.setAttribute('style', 'white-space: pre');
-  text.innerHTML = annotation.content;
-  let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  g.setAttribute('transform', 'scale(1) rotate(0) translate(0, 0)');
-  g.appendChild(text);
-
-  let viewport = page.getViewport({scale: DEFAULT_SCALE});
-  let styleViewport = page.getViewport({scale: DEFAULT_SCALE * PixelsPerInch.PDF_TO_CSS_UNITS});
-  let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('width', viewport.width);
-  svg.setAttribute('height', viewport.height);
-  svg.style.width = `${styleViewport.width}px`;
-  svg.style.height = `${styleViewport.height}px`;
-  svg.appendChild(g);
-*/
-  let temp_div = document.createElement('div');
-  temp_div.innerHTML = 
-  `<svg width="612" height="792" style="width: 816px; height: 1056px;"><g transform="scale(1) rotate(0) translate(0, 0)"><text x="0" y="1056" fill="#E71F63" font-size="48" transform="rotate(0)" style="white-space: pre">123456789</text></g></svg>`;
-  let svg = temp_div.firstChild;
-  let g = svg.firstChild;
-  let text = g.firstChild;
-
-  document.body.appendChild(svg);
-
-  let boundingClientRect = text.getBoundingClientRect();
-  let bbox = text.getBBox();
-  let fontSize = window.getComputedStyle(text).fontSize;
-
-  console.log("annotation : ", annotation);
-  console.log("boundingClientRect : ", boundingClientRect);
-  console.log("bbox : ", bbox);
-  console.log("fontSize : ", fontSize);
-
-  document.body.removeChild(svg);
 }
 
 function measureText(pText, pFontSize, pStyle) {
@@ -407,4 +365,20 @@ function measureText(pText, pFontSize, pStyle) {
   lDiv = null;
 
   return lResult;
+}
+
+function hexToRgb(color) {
+  let hex = color.replace('#', '');
+  let value = hex.match(/[a-f\d]/gi);
+  if (value.length == 3) hex = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+  value = hex.match(/[a-f\d]{2}/gi);
+  let r = parseInt(value[0], 16);
+  let g = parseInt(value[1], 16);
+  let b = parseInt(value[2], 16);
+  let rgb = {
+      r: r,
+      g: g,
+      b: b
+  }
+  return rgb;
 }
