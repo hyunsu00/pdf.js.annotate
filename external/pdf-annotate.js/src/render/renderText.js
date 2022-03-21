@@ -16,6 +16,7 @@ export default function renderText(a) {
     x: a.x,
     y: a.y,
     fill: normalizeColor(a.color || '#000'),
+    fontFamily: 'Helvetica',
     fontSize: a.size,
     transform: `rotate(${a.rotation})`,
     style: 'white-space: pre'

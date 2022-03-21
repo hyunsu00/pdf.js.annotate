@@ -311,27 +311,23 @@ async function writeAnnotation(docId, pdfDocument) {
         writer.createTextAnnotation(value);
       } else if (annotation.type == "textbox") {    
         const magicWidth = 2;
-        let _x = 0;
-        let _y = 993;
-        let _width = 236.5078125;
-        let _height = 54;
         const fontSize = annotation.size;
         const textSize = measureText(annotation.content, fontSize);
         const contents = annotation.content;
         const textColor = hexToRgb(annotation.color);
-        const left = Math.floor(_x * scaleX);
-        const top = height - Math.floor((_y + _height) * scaleY);
-        const right = left + Math.floor(_width * scaleX); 
-        const bottom = top + Math.floor(_height);
+        const left = Math.floor(annotation.x * scaleX);
+        const top = height - Math.floor(annotation.y * scaleY);
+        const right = left + Math.floor(textSize.width * scaleX) + magicWidth; 
+        const bottom = top + Math.floor(textSize.height * scaleY) + Math.floor((textSize.height - fontSize) / 2 * scaleY);
         let ta = writer.createFreeTextAnnotation({
           page: pageIndex,
           rect: [left, top, right, bottom],
           contents: contents,
           color: {r: 1, g: 1, b: 0},
           textColor: textColor,
+          font: "Helvetica",
           fontSize: Math.floor(fontSize * scaleY),
-          opacity: 0.5,
-          font: "Helvetica"
+          opacity: 0.5
         });
         ta.createDefaultAppearanceStream();  
       } 
