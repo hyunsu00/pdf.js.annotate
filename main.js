@@ -13,6 +13,7 @@ import("./external/pdf.js/web/viewer.js").then(() => {
 });
 import "./lib/pdf-annotate-render.js";
 import "./lib/pdf-annotate-writer.js";
+import { undoRedo } from "./undo-redo.js";
 
 let AnnotateRender = PDFAnnotateRender["default"];
 const UI = AnnotateRender.UI;
@@ -377,4 +378,57 @@ function hexToRgb(color) {
       b: b
   }
   return rgb;
+}
+
+//
+//
+//
+// Undo / Redo
+document.getElementById("undo").addEventListener("click", (e) => {
+  console.log("click undo");
+  
+  localStorage.clear();
+  {
+    let _object_to_save_or_restore = {};
+    let myUndoRedo = undoRedo(10, _object_to_save_or_restore);
+    myUndoRedo.save();
+    _object_to_save_or_restore.x = [1, 2];
+    myUndoRedo.save();
+    _object_to_save_or_restore.x = [1, 2, 3];
+    myUndoRedo.save();
+    _object_to_save_or_restore.y = [4, 5, 6];
+    myUndoRedo.save();
+
+    myUndoRedo.undo();
+    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+    myUndoRedo.undo();
+    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+    myUndoRedo.undo();
+    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+    myUndoRedo.undo();
+    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+  }
+});
+
+document.getElementById("redo").addEventListener("click", (e) => {
+  console.log("click redo");
+
+  // console.log(localStorage.lastSav);
+  // myUndoRedo.redo();
+  // console.log(localStorage.stRedo);
+  // console.log(localStorage.lastSav);
+  // Object.assign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+});
+
+function DeepAssign(target, source) {
+  // target === {} 로 만든다.
+  for (var prop in target) {
+    if (target.hasOwnProperty(prop)){
+        delete target[prop];
+    }
+  }
+
+  for (var prop in source) {
+    target[prop] = source[prop];
+  }
 }
