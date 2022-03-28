@@ -13,7 +13,7 @@ import("./external/pdf.js/web/viewer.js").then(() => {
 });
 import "./lib/pdf-annotate-render.js";
 import "./lib/pdf-annotate-writer.js";
-import { undoRedo } from "./undo-redo.js";
+import { undoRedo } from "./UndoRedo.js";
 
 let AnnotateRender = PDFAnnotateRender["default"];
 const UI = AnnotateRender.UI;
@@ -108,16 +108,41 @@ function setActiveToolbarItem(type) {
   toolType = type;
 }
 
-function handleAnnotationClick(target) {
+UI.addEventListener("annotation:click", (target) => {
   console.log("click handleAnnotationClick");
-}
-
-function handleAnnotationBlur(target) {
+});
+UI.addEventListener("annotation:blur", (target) => {
   console.log("click handleAnnotationBlur");
-}
+});
 
-UI.addEventListener("annotation:click", handleAnnotationClick);
-UI.addEventListener("annotation:blur", handleAnnotationBlur);
+let stUndo = localStorage.stUndo || []; // 스택 실행 취소
+let stRedo = localStorage.stRedo || []; // 스택 다시 실행
+const stackSize = 10;
+UI.addEventListener('annotation:add', (documentId, pageNumber, annotation) => {
+  let item = localStorage.getItem(`${documentId}/annotations`);
+  if (item) {
+    stUndo.push(item);
+		if (stUndo.length > stackSize) {
+      stUndo.shift(); // 너무 많은 상태가 저장된 경우 가장 오래된 것 제거
+    }
+    localStorage.stUndo = stUndo;
+  }
+  if (stRedo.length > 0) { // 새 상태를 저장하면 다시 실행 스택이 무효화됩니다.
+    stRedo.length = 0;
+    localStorage.stRedo = stRedo;
+  }; 
+});
+
+
+UI.addEventListener('annotation:edit', (documentId, annotationId, annotation) => {
+});
+UI.addEventListener('annotation:delete', (documentId, annotationId) => {
+});
+UI.addEventListener('comment:add', (documentId, annotationId, comment) => {
+});
+UI.addEventListener('comment:delete', (documentId, commentId) => {
+
+});
 
 // 선택
 document.getElementById("cursor").addEventListener("click", (e) => {
@@ -387,37 +412,25 @@ function hexToRgb(color) {
 document.getElementById("undo").addEventListener("click", (e) => {
   console.log("click undo");
   
-  localStorage.clear();
-  {
-    let _object_to_save_or_restore = {};
-    let myUndoRedo = undoRedo(10, _object_to_save_or_restore);
-    myUndoRedo.save();
-    _object_to_save_or_restore.x = [1, 2];
-    myUndoRedo.save();
-    _object_to_save_or_restore.x = [1, 2, 3];
-    myUndoRedo.save();
-    _object_to_save_or_restore.y = [4, 5, 6];
-    myUndoRedo.save();
-
-    myUndoRedo.undo();
-    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
-    myUndoRedo.undo();
-    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
-    myUndoRedo.undo();
-    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
-    myUndoRedo.undo();
-    DeepAssign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+  if (stUndo.length > 0) {
+    stRedo.push(localStorage.getItem(`${PDFViewerApplication.baseUrl}/annotations`));
+    let item = stUndo.pop();
+    localStorage.stUndo = stUndo;
+    localStorage.stRedo = stRedo;
+    localStorage.setItem(`${PDFViewerApplication.baseUrl}/annotations`, item);
   }
 });
 
 document.getElementById("redo").addEventListener("click", (e) => {
   console.log("click redo");
 
-  // console.log(localStorage.lastSav);
-  // myUndoRedo.redo();
-  // console.log(localStorage.stRedo);
-  // console.log(localStorage.lastSav);
-  // Object.assign(_object_to_save_or_restore, JSON.parse(localStorage.lastSav));
+  if (stRedo.length>0) {
+    stUndo.push(localStorage.getItem(`${PDFViewerApplication.baseUrl}/annotations`));
+    let item = stRedo.pop();
+    localStorage.stUndo = stUndo;
+    localStorage.stRedo = stRedo;
+    localStorage.setItem(`${PDFViewerApplication.baseUrl}/annotations`, item);
+  }
 });
 
 function DeepAssign(target, source) {
