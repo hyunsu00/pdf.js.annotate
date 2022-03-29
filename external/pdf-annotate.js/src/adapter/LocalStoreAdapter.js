@@ -1,5 +1,6 @@
 import uuid from '../utils/uuid';
 import StoreAdapter from './StoreAdapter';
+import { fireEvent } from '../UI/event';
 
 // StoreAdapter for working with localStorage
 // This is ideal for testing, examples, and prototyping
@@ -121,6 +122,7 @@ function getAnnotations(documentId) {
 }
 
 function updateAnnotations(documentId, annotations) {
+  fireEvent('annotation:updateAnnotations', documentId, annotations);
   localStorage.setItem(`${documentId}/annotations`, JSON.stringify(annotations));
 }
 /**

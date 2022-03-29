@@ -13,7 +13,6 @@ import("./external/pdf.js/web/viewer.js").then(() => {
 });
 import "./lib/pdf-annotate-render.js";
 import "./lib/pdf-annotate-writer.js";
-import { undoRedo } from "./UndoRedo.js";
 
 let AnnotateRender = PDFAnnotateRender["default"];
 const UI = AnnotateRender.UI;
@@ -113,35 +112,6 @@ UI.addEventListener("annotation:click", (target) => {
 });
 UI.addEventListener("annotation:blur", (target) => {
   console.log("click handleAnnotationBlur");
-});
-
-let stUndo = localStorage.stUndo || []; // 스택 실행 취소
-let stRedo = localStorage.stRedo || []; // 스택 다시 실행
-const stackSize = 10;
-UI.addEventListener('annotation:add', (documentId, pageNumber, annotation) => {
-  let item = localStorage.getItem(`${documentId}/annotations`);
-  if (item) {
-    stUndo.push(item);
-		if (stUndo.length > stackSize) {
-      stUndo.shift(); // 너무 많은 상태가 저장된 경우 가장 오래된 것 제거
-    }
-    localStorage.stUndo = stUndo;
-  }
-  if (stRedo.length > 0) { // 새 상태를 저장하면 다시 실행 스택이 무효화됩니다.
-    stRedo.length = 0;
-    localStorage.stRedo = stRedo;
-  }; 
-});
-
-
-UI.addEventListener('annotation:edit', (documentId, annotationId, annotation) => {
-});
-UI.addEventListener('annotation:delete', (documentId, annotationId) => {
-});
-UI.addEventListener('comment:add', (documentId, annotationId, comment) => {
-});
-UI.addEventListener('comment:delete', (documentId, commentId) => {
-
 });
 
 // 선택
@@ -409,27 +379,68 @@ function hexToRgb(color) {
 //
 //
 // Undo / Redo
+UI.addEventListener('annotation:updateAnnotations', (documentId, annotations) => {
+  console.log("annotation:updateAnnotations");
+
+  const L = localStorage;
+
+  const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
+  const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
+  let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
+  let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+  const stackSize = 10;
+
+  let lastVal = L.getItem(`${documentId}/annotations`) || "[]";
+  if (lastVal) {
+    undoStack.push(JSON.parse(lastVal));
+		if (undoStack.length > stackSize) {
+      undoStack.shift(); // 너무 많은 상태가 저장된 경우 가장 오래된 것 제거
+    }
+    L.setItem(`${documentId}/undo`, JSON.stringify(undoStack));
+  }
+  if (redoStack.length > 0) { // 새 상태를 저장하면 다시 실행 스택이 무효화됩니다.
+    redoStack.length = 0;
+    L.setItem(`${documentId}/redo`, JSON.stringify(redoStack));
+  };
+});
+
 document.getElementById("undo").addEventListener("click", (e) => {
   console.log("click undo");
   
-  if (stUndo.length > 0) {
-    stRedo.push(localStorage.getItem(`${PDFViewerApplication.baseUrl}/annotations`));
-    let item = stUndo.pop();
-    localStorage.stUndo = stUndo;
-    localStorage.stRedo = stRedo;
-    localStorage.setItem(`${PDFViewerApplication.baseUrl}/annotations`, item);
+  const L = localStorage;
+
+  const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
+  const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
+  let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
+  let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+
+  if (undoStack.length > 0) {
+    let lastVal = L.getItem(`${PDFViewerApplication.baseUrl}/annotations`);
+    redoStack.push(JSON.parse(lastVal));
+    let undoVal = undoStack.pop();
+    L.setItem(`${PDFViewerApplication.baseUrl}/undo`, JSON.stringify(undoStack));
+    L.setItem(`${PDFViewerApplication.baseUrl}/redo`, JSON.stringify(redoStack));
+    L.setItem(`${PDFViewerApplication.baseUrl}/annotations`, JSON.stringify(undoVal));
   }
 });
 
 document.getElementById("redo").addEventListener("click", (e) => {
   console.log("click redo");
 
-  if (stRedo.length>0) {
-    stUndo.push(localStorage.getItem(`${PDFViewerApplication.baseUrl}/annotations`));
-    let item = stRedo.pop();
-    localStorage.stUndo = stUndo;
-    localStorage.stRedo = stRedo;
-    localStorage.setItem(`${PDFViewerApplication.baseUrl}/annotations`, item);
+  const L = localStorage;
+
+  const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
+  const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
+  let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
+  let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+
+  if (redoStack.length > 0) {
+    let lastVal = L.getItem(`${PDFViewerApplication.baseUrl}/annotations`);
+    undoStack.push(JSON.parse(lastVal));
+    let redoVal = redoStack.pop();
+    L.setItem(`${PDFViewerApplication.baseUrl}/undo`, JSON.stringify(undoStack));
+    L.setItem(`${PDFViewerApplication.baseUrl}/redo`, JSON.stringify(redoStack));
+    L.setItem(`${PDFViewerApplication.baseUrl}/annotations`, JSON.stringify(redoVal));
   }
 });
 
