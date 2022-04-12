@@ -8,6 +8,32 @@ import renderArrow from './renderArrow';
 
 const isFirefox = /firefox/i.test(navigator.userAgent);
 
+import setAttributes from '../utils/setAttributes';
+import normalizeColor from '../utils/normalizeColor';
+function _renderLine(a) {
+  let group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  setAttributes(group, {
+    stroke: normalizeColor(a.color || '#f00'),
+    strokeWidth: a.width
+  });
+
+  if (a.lines.length === 2) {
+    let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+
+    let p1 = a.lines[0];
+    let p2 = a.lines[a.lines.length - 1];
+    setAttributes(line, {
+      x1: p1[0],
+      y1: p1[1],
+      x2: p2[0],
+      y2: p2[1]
+    });
+
+    group.appendChild(line);
+  }
+
+  return group;
+}
 /**
  * Get the x/y translation to be used for transforming the annotations
  * based on the rotation of the viewport.
@@ -125,6 +151,8 @@ export function appendChild(svg, annotation, viewport) {
       child = renderCircle(annotation);
       break;
     case 'line':
+      child = _renderLine(annotation);
+      break;
     case 'strikeout':
       child = renderLine(annotation);
       break;

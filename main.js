@@ -71,6 +71,9 @@ function setActiveToolbarItem(type) {
     case "fillcircle":
       UI.disableCircle();
       break;
+    case "line":
+      UI.disableLine();
+      break;
   }
 
   switch (type) {
@@ -102,7 +105,7 @@ function setActiveToolbarItem(type) {
     case "fillcircle":
       UI.enableCircle(type);
     case "line":
-      
+      UI.enableLine();
       break;
   }
 
@@ -180,9 +183,12 @@ document.getElementById("visible").addEventListener("click", (e) => {
 });
 // 선 그리기
 document.getElementById("line").addEventListener("click", (e) => {
-  alert("선 그리기 기능 구현이 되어있지 않음");
-
   console.log("click line");
+
+  setActiveToolbarItem("line");
+  let lineWidth = 10;
+  let lineColor = "#E71F63";
+  UI.setLine(lineWidth, lineColor);
 });
 // 화살표 그리기
 document.getElementById("arrow").addEventListener("click", (e) => {

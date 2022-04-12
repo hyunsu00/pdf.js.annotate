@@ -8,7 +8,7 @@ import { disableRect, enableRect } from './rect';
 import { disableCircle, enableCircle, setCircle, addCircle } from './circle';
 import { disableText, enableText, setText } from './text';
 import { createPage, renderPage } from './page';
-import { disableLine, enableLine } from './line';
+import { disableLine, enableLine, setLine } from './line';
 
 export default {
   addEventListener,
@@ -48,5 +48,6 @@ export default {
   renderPage,
 
   disableLine,
-  enableLine
+  enableLine,
+  setLine
 };

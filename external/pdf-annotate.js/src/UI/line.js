@@ -2,42 +2,19 @@ import PDFJSAnnotate from '../PDFJSAnnotate';
 import config from '../config';
 import { appendChild } from '../render/appendChild';
 import {
-  BORDER_COLOR,
   disableUserSelect,
   enableUserSelect,
   findSVGAtPoint,
-  getMetadata,
-  convertToSvgRect
+  convertToSvgPoint,
+  getMetadata
 } from './utils';
 import { fireEvent } from './event';
 
 let _enabled = false;
-let _type;
-let overlay;
-let originY;
-let originX;
-
-/**
- * Get the current window selection as rects
- *
- * @return {Array} An Array of rects
- */
-function getSelectionRects() {
-  try {
-    let selection = window.getSelection();
-    let range = selection.getRangeAt(0);
-    let rects = range.getClientRects();
-
-    if (rects.length > 0 &&
-        rects[0].width > 0 &&
-        rects[0].height > 0) {
-      return rects;
-    }
-  }
-  catch (e) {}
-
-  return null;
-}
+let _lineWidth;
+let _lineColor;
+let path;
+let lines;
 
 /**
  * Handle document.mousedown event
@@ -45,22 +22,14 @@ function getSelectionRects() {
  * @param {Event} e The DOM event to handle
  */
 function handleDocumentMousedown(e) {
-  let svg;
-  if (_type !== 'area' || !(svg = findSVGAtPoint(e.clientX, e.clientY))) {
+  let svg = findSVGAtPoint(e.clientX, e.clientY);
+  if (!svg) {
     return;
   }
 
-  let rect = svg.getBoundingClientRect();
-  originY = e.clientY;
-  originX = e.clientX;
-
-  overlay = document.createElement('div');
-  overlay.style.position = 'absolute';
-  overlay.style.top = `${originY - rect.top}px`;
-  overlay.style.left = `${originX - rect.left}px`;
-  overlay.style.border = `3px solid ${BORDER_COLOR}`;
-  overlay.style.borderRadius = '3px';
-  svg.parentNode.appendChild(overlay);
+  path = null;
+  lines = [];
+  lines.push(_ToSvgPoint(svg, e.clientX, e.clientY));
 
   document.addEventListener('mousemove', handleDocumentMousemove);
   disableUserSelect();
@@ -72,16 +41,23 @@ function handleDocumentMousedown(e) {
  * @param {Event} e The DOM event to handle
  */
 function handleDocumentMousemove(e) {
-  let svg = overlay.parentNode.querySelector(config.annotationSvgQuery());
-  let rect = svg.getBoundingClientRect();
-
-  if (originX + (e.clientX - originX) < rect.right) {
-    overlay.style.width = `${e.clientX - originX}px`;
+  let svg = findSVGAtPoint(e.clientX, e.clientY);
+  if (!svg || !lines || !lines.length) {
+    return;
   }
 
-  if (originY + (e.clientY - originY) < rect.bottom) {
-    overlay.style.height = `${e.clientY - originY}px`;
+  lines[1] = _ToSvgPoint(svg, e.clientX, e.clientY); // update end point
+
+  if (path) {
+    svg.removeChild(path);
   }
+  let annotation = {
+    type: 'line',
+    color: _lineColor,
+    width: _lineWidth,
+    lines
+  };
+  path = appendChild(svg, annotation);
 }
 
 /**
@@ -90,33 +66,32 @@ function handleDocumentMousemove(e) {
  * @param {Event} e The DOM event to handle
  */
 function handleDocumentMouseup(e) {
-  let rects;
-  if (_type !== 'area' && (rects = getSelectionRects())) {
-    saveRect(_type, [...rects].map((r) => {
-      return {
-        top: r.top,
-        left: r.left,
-        width: r.width,
-        height: r.height
-      };
-    }));
+  let svg = findSVGAtPoint(e.clientX, e.clientY);
+  if (!svg || !lines || !lines.length) {
+    return;
   }
-  else if (_type === 'area' && overlay) {
-    let svg = overlay.parentNode.querySelector(config.annotationSvgQuery());
-    let rect = svg.getBoundingClientRect();
-    saveRect(_type, [{
-      top: parseInt(overlay.style.top, 10) + rect.top,
-      left: parseInt(overlay.style.left, 10) + rect.left,
-      width: parseInt(overlay.style.width, 10),
-      height: parseInt(overlay.style.height, 10)
-    }]);
 
-    overlay.parentNode.removeChild(overlay);
-    overlay = null;
+  lines[1] = _ToSvgPoint(svg, e.clientX, e.clientY); // update end point
 
-    document.removeEventListener('mousemove', handleDocumentMousemove);
-    enableUserSelect();
+  if (path) {
+    svg.removeChild(path);
   }
+  let annotation = {
+    type: 'line',
+    color: _lineColor,
+    width: _lineWidth,
+    lines
+  };
+  path = appendChild(svg, annotation);
+
+  let { documentId, pageNumber } = getMetadata(svg);
+  PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, annotation)
+  .then((annotation) => {
+    fireEvent('annotation:appendChild', svg, annotation);
+  });
+
+  document.removeEventListener('mousemove', handleDocumentMousemove);
+  enableUserSelect();
 }
 
 /**
@@ -127,32 +102,42 @@ function handleDocumentMouseup(e) {
 function handleDocumentKeyup(e) {
   // Cancel rect if Esc is pressed
   if (e.keyCode === 27) {
-    let selection = window.getSelection();
-    selection.removeAllRanges();
-    if (overlay && overlay.parentNode) {
-      overlay.parentNode.removeChild(overlay);
-      overlay = null;
-      document.removeEventListener('mousemove', handleDocumentMousemove);
-    }
+    lines = null;
+    path.parentNode.removeChild(path);
+
+    document.removeEventListener('mousemove', handleDocumentMousemove);
   }
 }
 
+function _ToSvgPoint(svg, clientX, clientY) {
+  if (!svg) {
+    return null;
+  }
+
+  let rect = svg.getBoundingClientRect();
+  let point = convertToSvgPoint([
+    clientX - rect.left,
+    clientY - rect.top
+  ], svg);
+
+  return point;
+}
+
 /**
- * Save a rect annotation
+ * Set the attributes of the pen.
  *
- * @param {String} type The type of rect (area, highlight, strikeout)
- * @param {Array} rects The rects to use for annotation
- * @param {String} color The color of the rects
+ * @param {Number} penSize The size of the lines drawn by the pen, rounded to 2 decimal places
+ * @param {String} penColor The color of the lines drawn by the pen
  */
-function saveLine(type, lines, color) {
+export function setLine(lineWidth = 1, lineColor = '000000') {
+  _lineWidth = Math.round(parseFloat(lineWidth) * 1e2) / 1e2;
+  _lineColor = lineColor;
 }
 
 /**
  * Enable line behavior
  */
-export function enableLine(type) {
-  _type = type;
-
+export function enableLine() {
   if (_enabled) { return; }
 
   _enabled = true;
