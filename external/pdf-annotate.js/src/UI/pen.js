@@ -7,6 +7,7 @@ import {
   getMetadata,
   convertToSvgPoint
 } from './utils';
+import { fireEvent } from './event';
 
 let _enabled = false;
 let _candraw = false;
@@ -54,6 +55,7 @@ function saveToStorage(x, y) {
       }
 
       appendChild(svg, annotation);
+      fireEvent('annotation:appendChild', svg, annotation);
     });
   }
 }

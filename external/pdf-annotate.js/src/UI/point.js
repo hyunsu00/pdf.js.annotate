@@ -6,6 +6,7 @@ import {
   getMetadata,
   scaleDown
 } from './utils';
+import { fireEvent } from './event';
 
 let _enabled = false;
 let input;
@@ -88,6 +89,7 @@ function savePoint() {
         );
 
         appendChild(svg, annotation);
+        fireEvent('annotation:appendChild', svg, annotation);
       });
   }
 

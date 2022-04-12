@@ -9,6 +9,7 @@ import {
   getMetadata,
   convertToSvgRect
 } from './utils';
+import { fireEvent } from './event';
 
 let _enabled = false;
 let _type;
@@ -203,6 +204,7 @@ function saveRect(type, rects, color) {
   PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, annotation)
     .then((annotation) => {
       appendChild(svg, annotation);
+      fireEvent('annotation:appendChild', svg, annotation);
     });
 }
 
