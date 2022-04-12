@@ -101,6 +101,8 @@ function setActiveToolbarItem(type) {
     case "emptycircle":
     case "fillcircle":
       UI.enableCircle(type);
+    case "line":
+      
       break;
   }
 
