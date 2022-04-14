@@ -72,21 +72,19 @@ function handleDocumentMouseup(e) {
   }
 
   lines[1] = _ToSvgPoint(svg, e.clientX, e.clientY); // update end point
-
-  if (path) {
-    svg.removeChild(path);
-  }
   let annotation = {
     type: 'line',
     color: _lineColor,
     width: _lineWidth,
     lines
   };
-  path = appendChild(svg, annotation);
-
   let { documentId, pageNumber } = getMetadata(svg);
   PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, annotation)
   .then((annotation) => {
+    if (path) {
+      svg.removeChild(path);
+    }
+    appendChild(svg, annotation);
     fireEvent('annotation:appendChild', svg, annotation);
   });
 
