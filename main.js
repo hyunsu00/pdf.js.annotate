@@ -64,6 +64,7 @@ function setActiveToolbarItem(type) {
     case "area":
     case "highlight":
     case "strikeout":
+    case "underline":
       UI.disableRect();
       break;
     case "circle":
@@ -98,6 +99,7 @@ function setActiveToolbarItem(type) {
     case "area":
     case "highlight":
     case "strikeout":
+    case "underline":
       UI.enableRect(type);
       break;
     case "circle":
@@ -209,9 +211,9 @@ document.getElementById("circle").addEventListener("click", (e) => {
 });
 // 밑줄
 document.getElementById("underline").addEventListener("click", (e) => {
-  alert("밑줄 기능 구현이 되어있지 않음");
+  console.log("click strikeout");
 
-  console.log("click underline");
+  setActiveToolbarItem("underline");
 });
 
 //

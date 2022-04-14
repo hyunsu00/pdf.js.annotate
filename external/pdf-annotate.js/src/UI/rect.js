@@ -158,7 +158,7 @@ function saveRect(type, rects, color) {
     if (type === 'highlight') {
       color = 'FFFF00';
     }
-    else if (type === 'strikeout') {
+    else if (type === 'strikeout' || type === 'underline') {
       color = 'FF0000';
     }
   }
@@ -172,6 +172,8 @@ function saveRect(type, rects, color) {
 
       if (type === 'strikeout') {
         offset = r.height / 2;
+      } else if (type === 'underline') {
+        offset = r.height;
       }
 
       return convertToSvgRect({
