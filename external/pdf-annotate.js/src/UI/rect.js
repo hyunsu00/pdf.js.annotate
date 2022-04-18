@@ -205,8 +205,9 @@ function saveRect(type, rects, color) {
   // Add the annotation
   PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, annotation)
     .then((annotation) => {
-      appendChild(svg, annotation);
-      fireEvent('annotation:appendChild', svg, annotation);
+      
+      let child = appendChild(svg, annotation);
+      fireEvent('annotation:appendChild', child);
     });
 }
 

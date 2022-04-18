@@ -84,8 +84,9 @@ function handleDocumentMouseup(e) {
     if (path) {
       svg.removeChild(path);
     }
-    appendChild(svg, annotation);
-    fireEvent('annotation:appendChild', svg, annotation);
+    
+    let child = appendChild(svg, annotation);
+    fireEvent('annotation:appendChild', child);
   });
 
   document.removeEventListener('mousemove', handleDocumentMousemove);

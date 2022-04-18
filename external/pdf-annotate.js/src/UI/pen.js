@@ -54,8 +54,8 @@ function saveToStorage(x, y) {
         svg.removeChild(path);
       }
 
-      appendChild(svg, annotation);
-      fireEvent('annotation:appendChild', svg, annotation);
+      let child = appendChild(svg, annotation);
+      fireEvent('annotation:appendChild', child);
     });
   }
 }

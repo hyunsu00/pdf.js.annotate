@@ -381,7 +381,8 @@ function hexToRgb(color) {
       r: r,
       g: g,
       b: b
-  }
+  };
+
   return rgb;
 }
 
@@ -392,66 +393,89 @@ function hexToRgb(color) {
 UI.addEventListener('annotation:updateAnnotations', (documentId, annotations) => {
   console.log("annotation:updateAnnotations");
 
-  const L = localStorage;
+  // const L = localStorage;
 
-  const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
-  const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
-  let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
-  let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
-  const stackSize = 10;
+  // const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
+  // const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
+  // let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
+  // let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+  // const stackSize = 10;
 
-  let lastVal = L.getItem(`${documentId}/annotations`) || "[]";
-  if (lastVal) {
-    undoStack.push(JSON.parse(lastVal));
-		if (undoStack.length > stackSize) {
-      undoStack.shift(); // 너무 많은 상태가 저장된 경우 가장 오래된 것 제거
-    }
-    L.setItem(`${documentId}/undo`, JSON.stringify(undoStack));
-  }
-  if (redoStack.length > 0) { // 새 상태를 저장하면 다시 실행 스택이 무효화됩니다.
-    redoStack.length = 0;
-    L.setItem(`${documentId}/redo`, JSON.stringify(redoStack));
-  };
+  // let lastVal = L.getItem(`${documentId}/annotations`) || "[]";
+  // if (lastVal) {
+  //   undoStack.push(JSON.parse(lastVal));
+	// 	if (undoStack.length > stackSize) {
+  //     undoStack.shift(); // 너무 많은 상태가 저장된 경우 가장 오래된 것 제거
+  //   }
+  //   L.setItem(`${documentId}/undo`, JSON.stringify(undoStack));
+  // }
+  // if (redoStack.length > 0) { // 새 상태를 저장하면 다시 실행 스택이 무효화됩니다.
+  //   redoStack.length = 0;
+  //   L.setItem(`${documentId}/redo`, JSON.stringify(redoStack));
+  // };
 });
 
 document.getElementById("undo").addEventListener("click", (e) => {
   console.log("click undo");
   
-  const L = localStorage;
+  let id = childEl.getAttribute('data-pdf-annotate-id');
+  let uuid = childEl.getAttribute('data-pdf-annotate-uuid');
+  let type = childEl.getAttribute('data-pdf-annotate-type');
 
-  const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
-  const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
-  let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
-  let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+  console.log(`data-pdf-annotate-id = ${id}, data-pdf-annotate-uuid = ${uuid}, data-pdf-annotate-type = ${type}`);
 
-  if (undoStack.length > 0) {
-    let lastVal = L.getItem(`${PDFViewerApplication.baseUrl}/annotations`);
-    redoStack.push(JSON.parse(lastVal));
-    let undoVal = undoStack.pop();
-    L.setItem(`${PDFViewerApplication.baseUrl}/undo`, JSON.stringify(undoStack));
-    L.setItem(`${PDFViewerApplication.baseUrl}/redo`, JSON.stringify(redoStack));
-    L.setItem(`${PDFViewerApplication.baseUrl}/annotations`, JSON.stringify(undoVal));
-  }
+  console.log(`childEl.parentNode = ${childEl.parentNode}`);
+  parentEl.removeChild(childEl);
+  console.log(`childEl.parentNode = ${childEl.parentNode}`);
+
+  //let target = document.querySelector(`[data-pdf-annotate-id="${uuid}"]`);
+  //target.parentNode.removeChild(target);
+
+  // const L = localStorage;
+
+  // const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
+  // const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
+  // let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
+  // let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+
+  // if (undoStack.length > 0) {
+  //   let lastVal = L.getItem(`${PDFViewerApplication.baseUrl}/annotations`);
+  //   redoStack.push(JSON.parse(lastVal));
+  //   let undoVal = undoStack.pop();
+  //   L.setItem(`${PDFViewerApplication.baseUrl}/undo`, JSON.stringify(undoStack));
+  //   L.setItem(`${PDFViewerApplication.baseUrl}/redo`, JSON.stringify(redoStack));
+  //   L.setItem(`${PDFViewerApplication.baseUrl}/annotations`, JSON.stringify(undoVal));
+  // }
 });
 
 document.getElementById("redo").addEventListener("click", (e) => {
   console.log("click redo");
 
-  const L = localStorage;
+  let id = childEl.getAttribute('data-pdf-annotate-id');
+  let uuid = childEl.getAttribute('data-pdf-annotate-id');
+  let type = childEl.getAttribute('data-pdf-annotate-type');
 
-  const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
-  const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
-  let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
-  let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+  console.log(`data-pdf-annotate-id = ${id}, data-pdf-annotate-uuid = ${uuid}, data-pdf-annotate-type = ${type}`);
 
-  if (redoStack.length > 0) {
-    let lastVal = L.getItem(`${PDFViewerApplication.baseUrl}/annotations`);
-    undoStack.push(JSON.parse(lastVal));
-    let redoVal = redoStack.pop();
-    L.setItem(`${PDFViewerApplication.baseUrl}/undo`, JSON.stringify(undoStack));
-    L.setItem(`${PDFViewerApplication.baseUrl}/redo`, JSON.stringify(redoStack));
-    L.setItem(`${PDFViewerApplication.baseUrl}/annotations`, JSON.stringify(redoVal));
-  }
+  console.log(`childEl.parentNode = ${childEl.parentNode}`);
+  parentEl.appendChild(childEl);
+  console.log(`childEl.parentNode = ${childEl.parentNode}`);
+
+  // const L = localStorage;
+
+  // const undoVal = L.getItem(`${PDFViewerApplication.baseUrl}/undo`);
+  // const redoVal = L.getItem(`${PDFViewerApplication.baseUrl}/redo`);
+  // let undoStack = undoVal ? JSON.parse(undoVal) : []; // 스택 실행 취소
+  // let redoStack = redoVal ? JSON.parse(redoVal) : []; // 스택 다시 실행
+
+  // if (redoStack.length > 0) {
+  //   let lastVal = L.getItem(`${PDFViewerApplication.baseUrl}/annotations`);
+  //   undoStack.push(JSON.parse(lastVal));
+  //   let redoVal = redoStack.pop();
+  //   L.setItem(`${PDFViewerApplication.baseUrl}/undo`, JSON.stringify(undoStack));
+  //   L.setItem(`${PDFViewerApplication.baseUrl}/redo`, JSON.stringify(redoStack));
+  //   L.setItem(`${PDFViewerApplication.baseUrl}/annotations`, JSON.stringify(redoVal));
+  // }
 });
 
 function DeepAssign(target, source) {
@@ -466,3 +490,13 @@ function DeepAssign(target, source) {
     target[prop] = source[prop];
   }
 }
+
+//
+let childEl;
+let parentEl;
+UI.addEventListener('annotation:appendChild', (child) => {
+  console.log("annotation:appendChild");
+  childEl = child;
+  parentEl = child.parentNode;
+});
+

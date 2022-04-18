@@ -88,8 +88,8 @@ function savePoint() {
           content
         );
 
-        appendChild(svg, annotation);
-        fireEvent('annotation:appendChild', svg, annotation);
+        let child = appendChild(svg, annotation);
+        fireEvent('annotation:appendChild', child);
       });
   }
 
