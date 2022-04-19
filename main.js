@@ -494,9 +494,17 @@ function DeepAssign(target, source) {
 //
 let childEl;
 let parentEl;
+let _value;
 UI.addEventListener('annotation:appendChild', (child) => {
   console.log("annotation:appendChild");
   childEl = child;
   parentEl = child.parentNode;
 });
 
+UI.addEventListener('annotation:modifyChild', (child, value) => {
+  console.log("annotation:modifyChild");
+  childEl = child;
+  parentEl = child.parentNode;
+  _value = value;
+  console.log(`child = ${child}, value = ${value}`);
+});
