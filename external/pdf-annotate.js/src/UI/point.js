@@ -89,7 +89,7 @@ function savePoint() {
         );
 
         let child = appendChild(svg, annotation);
-        fireEvent('annotation:appendChild', child);
+        fireEvent('annotation:appendChild', child, {undo : {value: null, str : null }, redo : {value : child, str : JSON.stringify(annotation)}});
       });
   }
 

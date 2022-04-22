@@ -250,6 +250,7 @@ function handleDocumentMouseup(e) {
       attribY = 'cy';
     }
     let undoValue, redoValue;
+    let undoStr, redoStr;
     
     if (type === 'point') {
       // Broken
@@ -283,6 +284,7 @@ function handleDocumentMouseup(e) {
         let modelX = parseInt(t.getAttribute(attribX), 10);
         let modelY = parseInt(t.getAttribute(attribY), 10);
         undoValue = {[attribX] : modelX, [attribY] : modelY};
+        undoStr = JSON.stringify(annotation);
 
         if (modelDelta.y !== 0) {
           modelY = modelY + modelDelta.y;
@@ -307,6 +309,7 @@ function handleDocumentMouseup(e) {
           }
         }
         redoValue = {[attribX] : modelX, [attribY] : modelY}; 
+        redoStr = JSON.stringify(annotation);
       });
     }
     else if (type === 'strikeout' || type === 'underline') {
@@ -349,7 +352,7 @@ function handleDocumentMouseup(e) {
 
     PDFJSAnnotate.getStoreAdapter().editAnnotation(documentId, annotationId, annotation)
       .then((annotation) => {
-        fireEvent('annotation:modifyChild', target, {undoValue: undoValue, redoValue : redoValue});
+        fireEvent('annotation:modifyChild', target, {undo : {value: undoValue, str : undoStr}, redo : {value : redoValue, str : redoStr}});
       });
   });
 

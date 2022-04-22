@@ -483,17 +483,17 @@ function DeepAssign(target, source) {
 }
 
 //
-UI.addEventListener('annotation:appendChild', (child) => {
+UI.addEventListener('annotation:appendChild', (target, value) => {
   gUndoRedoManager.Add(
-    new AppendChildCommand(child, null, null)
+    new AppendChildCommand(PDFViewerApplication.baseUrl, target, value)
   );
 });
 
 
-UI.addEventListener('annotation:modifyChild', (child, value) => {
+UI.addEventListener('annotation:modifyChild', (target, value) => {
   console.log("annotation:modifyChild");
 
   gUndoRedoManager.Add(
-    new ModifyChildCommand(child[0], value.undoValue, value.redoValue)
+    new ModifyChildCommand(PDFViewerApplication.baseUrl, target[0], value)
   );
 });

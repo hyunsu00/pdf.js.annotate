@@ -29,4 +29,12 @@ export default class UndoRedoManager {
 		this._undoStack.push(command);
 		command.Redo();
 	}
+
+	IsUndo() {
+		return this._undoStack.length ? true : false;
+	}
+
+	IsRedo() {
+		return this._redoStack.length ? true : false;
+	}
 }
