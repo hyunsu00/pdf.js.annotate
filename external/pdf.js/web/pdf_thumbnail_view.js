@@ -252,26 +252,28 @@ class PDFThumbnailView {
     if (this.renderingState !== RenderingStates.FINISHED) {
       throw new Error("_convertCanvasToImage: Rendering has not finished.");
     }
-    const reducedCanvas = this._reduceImage(canvas);
 
-    const image = document.createElement("img");
-    image.className = "thumbnailImage";
-    this._thumbPageCanvas.then(msg => {
-      image.setAttribute("aria-label", msg);
+    this._createAnnotationCanvas(canvas).then(annotationCanvas => {
+      const reducedCanvas = this._reduceImage(annotationCanvas);
+      const image = document.createElement("img");
+      image.className = "thumbnailImage";
+      this._thumbPageCanvas.then(msg => {
+        image.setAttribute("aria-label", msg);
+      });
+      image.style.width = this.canvasWidth + "px";
+      image.style.height = this.canvasHeight + "px";
+
+      image.src = reducedCanvas.toDataURL();
+      this.image = image;
+
+      this.div.setAttribute("data-loaded", true);
+      this.ring.appendChild(image);
+
+      // Zeroing the width and height causes Firefox to release graphics
+      // resources immediately, which can greatly reduce memory consumption.
+      reducedCanvas.width = 0;
+      reducedCanvas.height = 0;    
     });
-    image.style.width = this.canvasWidth + "px";
-    image.style.height = this.canvasHeight + "px";
-
-    image.src = reducedCanvas.toDataURL();
-    this.image = image;
-
-    this.div.setAttribute("data-loaded", true);
-    this.ring.appendChild(image);
-
-    // Zeroing the width and height causes Firefox to release graphics
-    // resources immediately, which can greatly reduce memory consumption.
-    reducedCanvas.width = 0;
-    reducedCanvas.height = 0;
   }
 
   draw() {
@@ -482,6 +484,41 @@ class PDFThumbnailView {
     this._thumbPageCanvas.then(msg => {
       this.image?.setAttribute("aria-label", msg);
     });
+  }
+
+  /**
+   * @private
+   */
+  _loadSVGImage(svgEl) {
+    return new Promise((resolve, reject) => {
+      const data = new XMLSerializer().serializeToString(svgEl);
+      var win = window.URL || window.webkitURL || window;
+      var img = new Image();
+      var blob = new Blob([data], { type: 'image/svg+xml' });
+      var url = win.createObjectURL(blob);
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  /**
+   * @private
+   */
+  async _createAnnotationCanvas(canvas) {
+    let newCanvas = document.createElement('canvas');
+    let context = newCanvas.getContext('2d');
+
+    newCanvas.width = canvas.width;
+    newCanvas.height = canvas.height;
+
+    context.drawImage(canvas, 0, 0);
+
+    let svgEl = document.getElementsByClassName('annotationLayer')[0];
+    let image = await this._loadSVGImage(svgEl);
+    context.drawImage(image, 0, 0, image.width, image.height, 0, 0, newCanvas.width, newCanvas.height);
+
+    return newCanvas;
   }
 }
 
