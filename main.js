@@ -497,3 +497,93 @@ UI.addEventListener('annotation:modifyChild', (target, value) => {
     new ModifyChildCommand(PDFViewerApplication.baseUrl, target[0], value)
   );
 });
+
+//
+//
+//
+// thumnail
+document.getElementById("thumnail").addEventListener("click", (e) => {
+  console.log("click thumnail");
+
+  let svgElements = document.getElementsByClassName('annotationLayer');
+  let svg = svgElements[0];
+
+  // get svg data
+  let xml = new XMLSerializer().serializeToString(svg);
+  // make it base64
+  let svg64 = btoa(xml);
+  let b64Start = 'data:image/svg+xml;base64,';
+  // prepend a "header"
+  let image64 = b64Start + svg64;
+  let image = new Image();
+  // set it as the source of the img element
+  image.src = image64;
+
+  //
+  let width = 612, height = 792;
+  let canvas = document.createElement('canvas');
+  canvas.widht = width;
+  canvas.height = height;
+  let context = canvas.getContext('2d');
+  context.drawImage(image, 0, 0, width, height );
+
+  //
+  let png = canvas.toDataURL(); // default png
+  //
+  let download = function(href, name){
+    let link = document.createElement('a');
+    link.download = name;
+    link.style.opacity = "0";
+    document.append(link);
+    link.href = href;
+    link.click();
+    link.remove();
+  }
+  download(png, "image.png");
+
+  // //
+  // let svgElements = document.getElementsByClassName('annotationLayer');
+  // let svgElement = svgElements[0];
+  // let {width, height} = svgElement.getBBox();
+
+  // //
+  // let clonedSvgElement = svgElement.cloneNode(true);
+
+  // //
+  // let outerHTML = clonedSvgElement.outerHTML;
+  // let blob =  new Blob([outerHTML],{type:'image/svg+xml;charset=utf-8'});
+
+  // //
+  // let URL = window.URL || window.webkitURL || window;
+  // let blobURL = URL.createObjectURL(blob);
+
+  // //
+  // let image = new Image();
+  // image.onload = () => {
+  //   let canvas = document.createElement('canvas');
+  //   canvas.widht = width;
+  //   canvas.height = height;
+  //   let context = canvas.getContext('2d');
+  //   // draw image in canvas starting left-0 , top - 0  
+  //   context.drawImage(image, 0, 0, width, height );
+  //   //  downloadImage(canvas); need to implement
+  // };
+  // image.src = blobURL;
+
+  // //
+  // let png = canvas.toDataURL(); // default png
+  // let jpeg = canvas.toDataURL('image/jpg');
+  // let webp = canvas.toDataURL('image/webp');
+
+  // //
+  // let download = function(href, name){
+  //   let link = document.createElement('a');
+  //   link.download = name;
+  //   link.style.opacity = "0";
+  //   document.append(link);
+  //   link.href = href;
+  //   link.click();
+  //   link.remove();
+  // }
+  // download(png, "image.png");
+});
