@@ -502,88 +502,62 @@ UI.addEventListener('annotation:modifyChild', (target, value) => {
 //
 //
 // thumnail
+function download_svg(svgEl) {
+  let canvas = document.createElement('canvas');
+  canvas.width = svgEl.getBoundingClientRect().width;
+  canvas.height = svgEl.getBoundingClientRect().height;
+  let data = new XMLSerializer().serializeToString(svgEl);
+  var win = window.URL || window.webkitURL || window;
+  var img = new Image();
+  var blob = new Blob([data], { type: 'image/svg+xml' });
+  var url = win.createObjectURL(blob);
+  img.onload = function () {
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    win.revokeObjectURL(url);
+    var uri = canvas.toDataURL('image/png').replace('image/png', 'octet/stream');
+    var a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    a.href = uri
+    a.download = (svgEl.id || svgEl.getAttribute('name') || svgEl.getAttribute('aria-label') || 'untitled') + '.png';
+    a.click();
+    window.URL.revokeObjectURL(uri);
+    document.body.removeChild(a);
+  };
+  img.src = url;
+}
+
+function download_thumnail(canvasEl, svgEl) {
+  let data = new XMLSerializer().serializeToString(svgEl);
+  var win = window.URL || window.webkitURL || window;
+  var img = new Image();
+  var blob = new Blob([data], { type: 'image/svg+xml' });
+  var url = win.createObjectURL(blob);
+  img.onload = function () {
+    canvasEl.getContext('2d').drawImage(img, 0, 0);
+    win.revokeObjectURL(url);
+    var uri = canvasEl.toDataURL('image/png').replace('image/png', 'octet/stream');
+    var a = document.createElement('a');
+    document.body.appendChild(a);
+    a.style = 'display: none';
+    a.href = uri
+    a.download = (svgEl.id || svgEl.getAttribute('name') || svgEl.getAttribute('aria-label') || 'untitled') + '.png';
+    a.click();
+    window.URL.revokeObjectURL(uri);
+    document.body.removeChild(a);
+  };
+  img.src = url;
+}
+
 document.getElementById("thumnail").addEventListener("click", (e) => {
   console.log("click thumnail");
 
   let svgElements = document.getElementsByClassName('annotationLayer');
   let svg = svgElements[0];
+  download_svg(svg);
 
-  // get svg data
-  let xml = new XMLSerializer().serializeToString(svg);
-  // make it base64
-  let svg64 = btoa(xml);
-  let b64Start = 'data:image/svg+xml;base64,';
-  // prepend a "header"
-  let image64 = b64Start + svg64;
-  let image = new Image();
-  // set it as the source of the img element
-  image.src = image64;
+  let canvasElements = document.getElementsByTagName('canvas');
+  let canvas = canvasElements[0];
 
-  //
-  let width = 612, height = 792;
-  let canvas = document.createElement('canvas');
-  canvas.widht = width;
-  canvas.height = height;
-  let context = canvas.getContext('2d');
-  context.drawImage(image, 0, 0, width, height );
-
-  //
-  let png = canvas.toDataURL(); // default png
-  //
-  let download = function(href, name){
-    let link = document.createElement('a');
-    link.download = name;
-    link.style.opacity = "0";
-    document.append(link);
-    link.href = href;
-    link.click();
-    link.remove();
-  }
-  download(png, "image.png");
-
-  // //
-  // let svgElements = document.getElementsByClassName('annotationLayer');
-  // let svgElement = svgElements[0];
-  // let {width, height} = svgElement.getBBox();
-
-  // //
-  // let clonedSvgElement = svgElement.cloneNode(true);
-
-  // //
-  // let outerHTML = clonedSvgElement.outerHTML;
-  // let blob =  new Blob([outerHTML],{type:'image/svg+xml;charset=utf-8'});
-
-  // //
-  // let URL = window.URL || window.webkitURL || window;
-  // let blobURL = URL.createObjectURL(blob);
-
-  // //
-  // let image = new Image();
-  // image.onload = () => {
-  //   let canvas = document.createElement('canvas');
-  //   canvas.widht = width;
-  //   canvas.height = height;
-  //   let context = canvas.getContext('2d');
-  //   // draw image in canvas starting left-0 , top - 0  
-  //   context.drawImage(image, 0, 0, width, height );
-  //   //  downloadImage(canvas); need to implement
-  // };
-  // image.src = blobURL;
-
-  // //
-  // let png = canvas.toDataURL(); // default png
-  // let jpeg = canvas.toDataURL('image/jpg');
-  // let webp = canvas.toDataURL('image/webp');
-
-  // //
-  // let download = function(href, name){
-  //   let link = document.createElement('a');
-  //   link.download = name;
-  //   link.style.opacity = "0";
-  //   document.append(link);
-  //   link.href = href;
-  //   link.click();
-  //   link.remove();
-  // }
-  // download(png, "image.png");
+  download_thumnail(canvas, svg);
 });
