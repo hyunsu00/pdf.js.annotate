@@ -7,16 +7,17 @@ import {
   enableUserSelect,
   findSVGAtPoint,
   getMetadata,
-  convertToSvgRect
+  convertToSvgRect,
+  addFormNode
 } from './utils';
-import { fireEvent } from './event';
+import { setSelectNode } from "./selector";
 
 let _enabled = false;
 let _type;
 let overlay;
 let originY;
 let originX;
-
+let fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth, strokeDasharray;
 /**
  * Get the current window selection as rects
  *
@@ -111,7 +112,7 @@ function handleDocumentMouseup(e) {
       height: parseInt(overlay.style.height, 10)
     }]);
 
-    overlay.parentNode.removeChild(overlay);
+    svg.parentNode.removeChild(overlay);
     overlay = null;
 
     document.removeEventListener('mousemove', handleDocumentMousemove);
@@ -130,7 +131,7 @@ function handleDocumentKeyup(e) {
     let selection = window.getSelection();
     selection.removeAllRanges();
     if (overlay && overlay.parentNode) {
-      overlay.parentNode.removeChild(overlay);
+			svg.parentNode.removeChild(overlay);
       overlay = null;
       document.removeEventListener('mousemove', handleDocumentMousemove);
     }
@@ -142,9 +143,10 @@ function handleDocumentKeyup(e) {
  *
  * @param {String} type The type of rect (area, highlight, strikeout)
  * @param {Array} rects The rects to use for annotation
- * @param {String} color The color of the rects
+ * @param {String} fillColor The fill color of the rects
+ * @param {String} strokeColor The strok color of the rects
  */
-function saveRect(type, rects, color) {
+export function saveRect(type, rects, fillColor, strokeColor) {
   let svg = findSVGAtPoint(rects[0].left, rects[0].top);
   let annotation;
 
@@ -154,27 +156,35 @@ function saveRect(type, rects, color) {
 
   let boundingRect = svg.getBoundingClientRect();
 
-  if (!color) {
+  if (!fillColor || !strokeColor) {
     if (type === 'highlight') {
-      color = 'FFFF00';
+      fillColor = '#FFFF00';
+      fillOpacity = 0.2;
     }
-    else if (type === 'strikeout' || type === 'underline') {
-      color = 'FF0000';
+    else if (type === 'strikeout') {
+      fillColor = 'none';
+      strokeColor = '#FF0000';
+      strokeOpacity = 1;
+      strokeWidth = 1;
+    }
+    else if (type === 'underline') {
+      fillColor = 'none';
+      strokeColor = '#6AD926';
+      strokeOpacity = 1;
+      strokeWidth = 1;
     }
   }
 
   // Initialize the annotation
   annotation = {
     type,
-    color,
+    fillColor,
+    fillOpacity,
+    strokeColor,
+    strokeOpacity,
+    strokeWidth,
     rectangles: [...rects].map((r) => {
       let offset = 0;
-
-      if (type === 'strikeout') {
-        offset = r.height / 2;
-      } else if (type === 'underline') {
-        offset = r.height;
-      }
 
       return convertToSvgRect({
         y: (r.top + offset) - boundingRect.top,
@@ -198,6 +208,12 @@ function saveRect(type, rects, color) {
     annotation.y = rect.y;
     annotation.width = rect.width;
     annotation.height = rect.height;
+    annotation.fillColor = 'none';
+    annotation.fillOpacity = 1;
+    annotation.strokeColor = '#FF0000';
+    annotation.strokeOpacity = 1;
+    annotation.strokeWidth = 1;
+    annotation.strokeDasharray = 'none';
   }
 
   let { documentId, pageNumber } = getMetadata(svg);
@@ -205,9 +221,7 @@ function saveRect(type, rects, color) {
   // Add the annotation
   PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, annotation)
     .then((annotation) => {
-      
-      let child = appendChild(svg, annotation);
-      fireEvent('annotation:appendChild', child, {undo : {value: null, str : null }, redo : {value : child, str : JSON.stringify(annotation)}});
+      setSelectNode(addFormNode(documentId, pageNumber, annotation, svg));
     });
 }
 

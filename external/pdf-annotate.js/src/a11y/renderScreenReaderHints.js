@@ -49,11 +49,20 @@ function sortByLinePoint(a, b) {
   );
 }
 
+function sortByPathPoint(a, b) {
+  let pathA = a.paths[0];
+  let pathB = b.paths[0];
+  return sortByLinePoint(
+    {lines: pathA},
+    {lines: pathB}
+  );
+}
+
 // Arrange supported types and associated sort methods
 const SORT_TYPES = {
   'highlight': sortByRectPoint,
   'strikeout': sortByRectPoint,
-  'drawing': sortByLinePoint,
+  'drawing': sortByPathPoint,
   'textbox': sortByPoint,
   'point': sortByPoint,
   'area': sortByPoint

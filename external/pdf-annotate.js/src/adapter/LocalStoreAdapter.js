@@ -74,13 +74,14 @@ export default class LocalStoreAdapter extends StoreAdapter {
       });
     };
 
-    this.addComment = (documentId, annotationId, content) => {
+    this.addComment = (documentId, annotationId, content, dataString) => {
       return new Promise((resolve, reject) => {
         let comment = {
           class: 'Comment',
           uuid: uuid(),
           annotation: annotationId,
-          content: content
+          content: content,
+          dataString: dataString
         };
 
         let annotations = getAnnotations(documentId);
@@ -122,7 +123,6 @@ function getAnnotations(documentId) {
 }
 
 function updateAnnotations(documentId, annotations) {
-  fireEvent('annotation:updateAnnotations', documentId, annotations);
   localStorage.setItem(`${documentId}/annotations`, JSON.stringify(annotations));
 }
 /**

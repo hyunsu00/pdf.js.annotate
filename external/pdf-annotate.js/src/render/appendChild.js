@@ -1,39 +1,18 @@
-import renderLine from './renderLine';
-import renderPath from './renderPath';
-import renderPoint from './renderPoint';
-import renderRect from './renderRect';
-import renderText from './renderText';
+﻿import renderLine from './renderLine'; // 선 그리기
+import renderRect from './renderRect'; // 직사각형
+import renderDrawing from './renderDrawing'; // 자유형 그리기 그룹
+import renderPath from './renderPath'; // 자유형 그리기
+import renderPoint from './renderPoint'; // 스티커 노트
+import renderText from './renderText'; // 텍스트
+import renderUnderline from './renderUnderline'; // 밑줄
+import renderStrikeout from './renderStrikeout'; // 취소선
+import renderHighlight from './renderHighlight'; // 형광펜
 import renderCircle from './renderCircle';
 import renderArrow from './renderArrow';
 
+
 const isFirefox = /firefox/i.test(navigator.userAgent);
 
-import setAttributes from '../utils/setAttributes';
-import normalizeColor from '../utils/normalizeColor';
-function _renderLine(a) {
-  let group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  setAttributes(group, {
-    stroke: normalizeColor(a.color || '#f00'),
-    strokeWidth: a.width
-  });
-
-  if (a.lines.length === 2) {
-    let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-
-    let p1 = a.lines[0];
-    let p2 = a.lines[a.lines.length - 1];
-    setAttributes(line, {
-      x1: p1[0],
-      y1: p1[1],
-      x2: p2[0],
-      y2: p2[1]
-    });
-
-    group.appendChild(line);
-  }
-
-  return group;
-}
 /**
  * Get the x/y translation to be used for transforming the annotations
  * based on the rotation of the viewport.
@@ -126,6 +105,68 @@ function transform(node, viewport) {
   return node;
 }
 
+function _createElement(annotation) {
+
+  let element = null;
+  switch (annotation.type) {
+    case 'area':
+      element = renderRect(annotation);
+      break;
+    case 'highlight':
+      element = renderHighlight(annotation);
+      break;
+    case 'circle':
+    case 'fillcircle':
+    case 'emptycircle':
+      element = renderCircle(annotation);
+      break;
+    case 'line':
+      element = renderLine(annotation);
+      break;
+    case 'strikeout':
+      element = renderStrikeout(annotation);
+      break;
+    case 'underline':
+      element = renderUnderline(annotation);
+      break;
+    case 'point':
+      element = renderPoint(annotation);
+      break;
+    case 'textbox':
+      element = renderText(annotation);
+      break;
+    case 'path':
+      element = renderPath(annotation);
+      break;
+    case 'drawing':
+      element = renderDrawing(annotation);
+      break;
+    case 'arrow':
+      element = renderArrow(annotation);
+      break;
+  }
+
+  // If no type was provided for an annotation it will result in node being null.
+  // Skip appending/transforming if node doesn't exist.
+  if (element) {
+    // Set attributes
+    element.setAttribute('data-pdf-annotate-id', annotation.uuid);
+    element.setAttribute('aria-hidden', true);
+
+    // Dynamically set any other attributes associated with annotation that is not related to drawing it
+    Object.keys(annotation).filter((key) => {
+      return ['color', 'x', 'y', 'cx', 'cy', 'color', 'documentId', 'lines', 'page',
+        'width', 'class', 'content', 'size', 'rotation', 'r', 'paths', 
+        'strokeWidth', 'strokeColor',  'strokeOpacity', 'strokeDasharray',
+        'fillColor', 'fillOpacity', 'rectangles'].indexOf(key) === -1;
+    }).forEach((key) => {
+      element.setAttribute(`data-pdf-annotate-${key}`, annotation[key]);
+    });
+  }
+
+  return element;
+}
+
 /**
  * Append an annotation as a child of an SVG.
  *
@@ -139,54 +180,42 @@ export function appendChild(svg, annotation, viewport) {
     viewport = JSON.parse(svg.getAttribute('data-pdf-annotate-viewport'));
   }
 
-  let child;
-  switch (annotation.type) {
-    case 'area':
-    case 'highlight':
-      child = renderRect(annotation);
-      break;
-    case 'circle':
-    case 'fillcircle':
-    case 'emptycircle':
-      child = renderCircle(annotation);
-      break;
-    case 'line':
-      child = _renderLine(annotation);
-      break;
-    case 'strikeout':
-    case 'underline':
-      child = renderLine(annotation);
-      break;
-    case 'point':
-      child = renderPoint(annotation);
-      break;
-    case 'textbox':
-      child = renderText(annotation);
-      break;
-    case 'drawing':
-      child = renderPath(annotation);
-      break;
-    case 'arrow':
-      child = renderArrow(annotation);
-      break;
+  let child = _createElement(annotation);
+  if (child) {
+    svg.appendChild(transform(child, viewport));
+  } else {
+    throw new Error('주석엘리먼트를 추가 할수 없다.');
   }
 
-  // If no type was provided for an annotation it will result in node being null.
-  // Skip appending/transforming if node doesn't exist.
-  if (child) {
-    // Set attributes
-    child.setAttribute('data-pdf-annotate-id', annotation.uuid);
-    child.setAttribute('aria-hidden', true);
+  return child;
+}
 
-    // Dynamically set any other attributes associated with annotation that is not related to drawing it
-    Object.keys(annotation).filter((key) => {
-      return ['color', 'x', 'y', 'cx', 'cy', 'color', 'documentId', 'lines', 'page',
-        'width', 'class', 'content', 'size', 'rotation', 'r'].indexOf(key) === -1;
-    }).forEach((key) => {
-      child.setAttribute(`data-pdf-annotate-${key}`, annotation[key]);
-    });
+export function replaceChild(svg, annotation, viewport) {
+  if (!viewport) {
+    viewport = JSON.parse(svg.getAttribute('data-pdf-annotate-viewport'));
+  }
 
-    svg.appendChild(transform(child, viewport));
+  const target = svg.querySelector('[data-pdf-annotate-id="' + annotation.uuid + '"]');
+  let child = _createElement(annotation);
+  if (target && child) {
+    svg.replaceChild(transform(child, viewport), target);
+  } else {
+    throw new Error('주석엘리먼트를 교체 할수 없다.');
+  }
+
+  return child;
+}
+
+export function insertBefore(svg, target, annotation, viewport) {
+  if (!viewport) {
+    viewport = JSON.parse(svg.getAttribute('data-pdf-annotate-viewport'));
+  }
+
+  let child = _createElement(annotation);
+  if (target && child) {
+    svg.insertBefore(transform(child, viewport), target);
+  } else {
+    throw new Error('주석엘리먼트를 교체 할수 없다.');
   }
 
   return child;
@@ -225,6 +254,16 @@ export default {
    * Append an SVG child for an annotation
    */
   appendChild,
+
+  /**
+   * Replace an SVG child for an annotation
+   */
+  replaceChild,
+
+  /**
+   * InsertBefore an SVG child for an annotation
+   */
+  insertBefore,
 
   /**
    * Transform an existing SVG child

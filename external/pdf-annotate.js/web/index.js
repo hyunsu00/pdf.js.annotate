@@ -427,14 +427,15 @@ render();
     if (supportsComments(target)) {
       let documentId = target.parentNode.getAttribute('data-pdf-annotate-document');
       let annotationId = target.getAttribute('data-pdf-annotate-id');
-
+      let dataString = new Date();
+     
       PDFJSAnnotate.getStoreAdapter().getComments(documentId, annotationId).then((comments) => {
         commentList.innerHTML = '';
         commentForm.style.display = '';
         commentText.focus();
 
         commentForm.onsubmit = function() {
-          PDFJSAnnotate.getStoreAdapter().addComment(documentId, annotationId, commentText.value.trim())
+          PDFJSAnnotate.getStoreAdapter().addComment(documentId, annotationId, commentText.value.trim(), dataString)
             .then(insertComment)
             .then(() => {
               commentText.value = '';

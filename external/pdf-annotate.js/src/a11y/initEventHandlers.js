@@ -61,7 +61,7 @@ function removeAnnotation(documentId, annotationId) {
  * @param {String} annotationId The ID of tha assocated annotation
  * @param {Object} comment The comment to insert a hint for
  */
-function insertComment(documentId, annotationId, comment) {
+function insertComment(documentId, annotationId, comment, dataString) {
   let list = document.querySelector(`pdf-annotate-screenreader-comment-list-${annotationId}`);
   let promise;
 

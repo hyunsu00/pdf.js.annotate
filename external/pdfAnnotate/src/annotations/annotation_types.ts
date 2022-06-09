@@ -135,7 +135,9 @@ export class BaseAnnotationObj implements BaseAnnotation {
             ret = ret.concat(WriterUtil.CONTENTS)
             ret.push(WriterUtil.SPACE)
             ret.push(WriterUtil.BRACKET_START)
-            ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(new Uint8Array(Util.convertStringToAscii(this.contents)), this.object_id))))
+            // INFO : Contents 만 일단 Unicode 적용
+            //ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(new Uint8Array(Util.convertStringToAscii(this.contents)), this.object_id))))
+            ret = ret.concat(Array.from(Util.escapeString(cryptoInterface.encrypt(Util.convertStringToUnicodeOrAscii(this.contents), this.object_id))))
             ret.push(WriterUtil.BRACKET_END)
             ret.push(WriterUtil.SPACE)
         }

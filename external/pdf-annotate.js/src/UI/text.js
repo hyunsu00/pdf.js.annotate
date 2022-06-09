@@ -4,15 +4,20 @@ import {
   BORDER_COLOR,
   findSVGAtPoint,
   getMetadata,
-  convertToSvgPoint
+  convertToSvgPoint,
+  addFormNode
 } from './utils';
 import { fireEvent } from './event';
+import { setSelectNode } from "./selector";
 
 let _enabled = false;
 let input;
 let _textSize;
 let _textColor;
-
+let _textBold;
+let _textItalic;
+let _textUnderline;
+let _textStrikethrough;
 /**
  * Handle document.mouseup event
  *
@@ -22,6 +27,9 @@ function handleDocumentMouseup(e) {
   if (input || !findSVGAtPoint(e.clientX, e.clientY)) {
     return;
   }
+
+	// stylebar disable
+  fireEvent('annotation:setStyleBarDisableState', true);
 
   input = document.createElement('input');
   input.setAttribute('id', 'pdf-annotate-text-input');
@@ -82,19 +90,23 @@ function saveText() {
       clientY - rect.top + height], svg, viewport);
     let annotation = {
       type: 'textbox',
-      size: _textSize * scale,
-      color: _textColor,
+      fontFamily: 'Helvetica',
+      fontSize: _textSize,
+      scale: scale,
+      fontColor: _textColor,
+      fontStyle: _textItalic,
+      fontWeight: _textBold,
+      textDecoration: {underline : _textUnderline, linethrough: _textStrikethrough},
       content: value,
       x: pt[0],
       y: pt[1],
       rotation: -viewport.rotation
     };
-
+  
     PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, annotation)
       .then((annotation) => {
-        
-        let child = appendChild(svg, annotation);
-        fireEvent('annotation:appendChild', child, {undo : {value: null, str : null }, redo : {value : child, str : JSON.stringify(annotation)}});
+        // true 상태 일경우 다음 click 이벤트가 호출되어도 셀렉션이 해제되지 않도록 한다. 디폴트는 false
+        setSelectNode(addFormNode(documentId, pageNumber, annotation, svg), true);
       });
   }
 
@@ -117,11 +129,54 @@ function closeInput() {
  * Set the text attributes
  *
  * @param {Number} textSize The size of the text
+ */
+ export function setTextSize(textSize) {
+  _textSize = parseInt(textSize, 10);
+}
+
+/**
+ * Set the text attributes
+ *
  * @param {String} textColor The color of the text
  */
-export function setText(textSize = 12, textColor = '000000') {
-  _textSize = parseInt(textSize, 10);
+ export function setTextColor(textColor) {
   _textColor = textColor;
+}
+
+/**
+ * Set the text attributes
+ *
+ * @param {String} textBold The bold of the text
+ */
+ export function setTextBold(textBold) {
+  _textBold = textBold;
+}
+
+/**
+ * Set the text attributes
+ *
+ * @param {String} textItalic The italic of the text
+ */
+ export function setTextItalic(textItalic) {
+  _textItalic = textItalic;
+}
+
+/**
+ * Set the text attributes
+ *
+ * @param {String} textUnderline The underline of the text
+ */
+ export function setTextUnderline(textUnderline) {
+  _textUnderline = textUnderline;
+}
+
+/**
+ * Set the text attributes
+ *
+ * @param {String} textStrikethrough The strikethrough of the text
+ */
+ export function setTextStrikethrough(textStrikethrough) {
+  _textStrikethrough = textStrikethrough;
 }
 
 /**

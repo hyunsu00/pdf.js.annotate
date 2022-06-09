@@ -55,6 +55,8 @@ export class Util {
     public static readonly XREF: number[] = [120, 114, 101, 102] // = 'xref'
     public static readonly STREAM: number[] = [115, 116, 114, 101, 97, 109] // = 'stream'
     public static readonly TRAILER: number[] = [116, 114, 97, 105, 108, 101, 114] // = 'trailer'
+    public static readonly BSLASH: number = 92
+    public static readonly UTF16_BOM: number[] = [92, 51, 55, 54, 92, 51, 55, 55] // = '\376\377'
 
     /**
      * Extracts the version information of a PDF file
@@ -770,5 +772,137 @@ export class Util {
      * */
     public static convertStringToHexString(value : string) : number[] {
         return Util.convertStringToByteString(value)
+    }
+
+    public static IsASCIIString(value : string) : boolean {
+        if (value == undefined || value == null) { throw "Property or Arguments was Never Null."; }
+        else {
+            let _chk = true;
+            if (typeof (value) != "string") { throw "Property or Arguments was not 'String' Types."; }
+            for (let i = 0; i < value.length; i++) {
+                let _ch = value.charCodeAt(i);
+                _chk = _chk && (_ch >= 0x00 && _ch <= 0x7F);
+            }
+            return _chk;
+        }
+    }
+
+    public static convertNotationString(d : number, notation : number, padding : number) : string {
+        padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+        notation = typeof (notation) === "undefined" || notation === null ? notation = 16 : notation;
+        
+        let ret = Number(d).toString(notation);
+     
+        while (ret.length < padding) {
+            ret = "0" + ret;
+        }
+     
+        return ret;
+    }
+
+    public static convertStringToOctalStream(toConvert: string): number[] {
+        let bytes : number[] = []
+
+        bytes = bytes.concat(Util.UTF16_BOM)
+        
+        for (let i = 0; i < toConvert.length; ++i) {
+            let charCode = toConvert.charCodeAt(i);
+            let first_charCode = (charCode & 0xFF00) >>> 8
+            let last_charCode = charCode & 0xFF
+
+            if (first_charCode == 0) {
+                bytes.push(Util.BSLASH)
+                bytes.push(48)   //0
+                bytes.push(48)   //0
+                bytes.push(48)   //0
+                bytes.push(last_charCode)
+            } else {
+                bytes.push(Util.BSLASH)
+                bytes = bytes.concat(Util.convertStringToAscii(Util.convertNotationString(first_charCode, 8, 3)))
+
+                bytes.push(Util.BSLASH)
+                bytes = bytes.concat(Util.convertStringToAscii(Util.convertNotationString(last_charCode, 8, 3)))
+            }
+        }
+
+        return bytes;
+    }
+
+    public static convertStringToHexaStream(toConvert: string): number[] {
+        let bytes : number[] = []
+
+        // BOM 삽입
+        bytes.push(254)
+        bytes.push(255)
+
+        for (let i = 0; i < toConvert.length; ++i) {
+            let charCode = toConvert.charCodeAt(i)
+
+            // UTF16 인코딩 - 2 bytes 분리
+            bytes.push((charCode & 0xFF00) >>> 8)
+            bytes.push(charCode & 0xFF)
+        }
+
+        return bytes;
+    }
+
+    public static convertStringToUnicodeString(toConvert: string): string {
+        let ret = ''
+
+        let isStartUnicode = false
+        let isStartAnsicode = false 
+
+        for (let i = 0; i < toConvert.length; ++i) {
+            let charCode = toConvert.charCodeAt(i);
+            let first_charCode = (charCode & 0xFF00) >>> 8
+            let last_charCode = charCode & 0xFF
+
+            if (charCode >= 0x00 && charCode <= 0x7F) {
+                if (isStartUnicode) {
+                    ret = ret.concat('>')
+                    isStartUnicode = false
+                }
+                
+                if (!isStartAnsicode) {
+                    ret = ret.concat('(')
+                    isStartAnsicode = true
+                }
+
+                ret = ret.concat(toConvert[i])
+            } else {
+                if (isStartAnsicode) {
+                    ret = ret.concat(')')
+                    isStartAnsicode = false
+                }
+
+                if (!isStartUnicode) {
+                    ret = ret.concat('<')
+                    isStartUnicode = true
+                }
+
+                ret = ret.concat(Util.convertNotationString(first_charCode, 16, 2).toUpperCase())
+                ret = ret.concat(Util.convertNotationString(last_charCode, 16, 2).toUpperCase())
+            }
+        }
+
+        if (isStartUnicode) {
+            ret = ret.concat('>')
+        }
+
+        if (isStartAnsicode) {
+            ret = ret.concat(')')
+        }
+
+        return ret
+    }
+
+    // Contents 저장시 사용
+    public static convertStringToUnicodeOrAscii(value : string) : Uint8Array {
+        if (!Util.IsASCIIString(value)) {
+            // INFO : Test 후 Hexa 로 저장, octal 저장시 convertStringToOctalStream 사용
+            return new Uint8Array(Util.convertStringToHexaStream(value))
+        }
+
+        return new Uint8Array(Util.convertStringToAscii(value))
     }
 }

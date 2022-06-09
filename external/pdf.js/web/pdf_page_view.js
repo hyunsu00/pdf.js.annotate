@@ -589,7 +589,7 @@ class PDFPageView {
       div.appendChild(canvasWrapper);
     }
 
-    // hyunsu00 - pdf-annotate-render 코드 추가
+    // pdf-annotate-render 코드 추가
     this.eventBus.dispatch("pdf-annotate-render", {
       source: this,
       parentNode: this.div,

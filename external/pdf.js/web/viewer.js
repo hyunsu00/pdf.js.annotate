@@ -129,7 +129,6 @@ function getViewerConfiguration() {
       viewerContainer: document.getElementById("viewerContainer"),
       toggleButton: document.getElementById("sidebarToggle"),
       // Buttons
-      thumbnailButton: document.getElementById("viewThumbnail"),
       outlineButton: document.getElementById("viewOutline"),
       attachmentsButton: document.getElementById("viewAttachments"),
       layersButton: document.getElementById("viewLayers"),

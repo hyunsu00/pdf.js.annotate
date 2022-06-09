@@ -1,21 +1,28 @@
-import StoreAdapter from './adapter/StoreAdapter';
+﻿import StoreAdapter from './adapter/StoreAdapter';
 import LocalStoreAdapter from './adapter/LocalStoreAdapter';
 import LocalUserStoreAdapter from './adapter/LocalUserStoreAdapter';
 import render from './render';
+import {
+  appendChild, 
+  replaceChild, 
+  insertBefore
+} from './render/appendChild';
 import UI from './UI';
 import config from './config';
 import uuid from './utils/uuid';
 import {
   findAnnotationAtPoint,
   findSVGContainer,
-  convertToScreenPoint
+  convertToScreenPoint,
+  getOffsetAnnotationRect
 } from './UI/utils';
 
 export default {
   findAnnotationAtPoint,
   findSVGContainer,
   convertToScreenPoint,
-
+  getOffsetAnnotationRect,
+  
   /**
    * Abstract class that needs to be defined so PDFJSAnnotate
    * knows how to communicate with your server.
@@ -76,6 +83,12 @@ export default {
    * @return {Promise}
    */
   render,
+
+  appendChild,
+
+  replaceChild, 
+
+  insertBefore,
 
   /**
    * Convenience method for getting annotation data

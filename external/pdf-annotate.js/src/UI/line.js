@@ -6,9 +6,10 @@ import {
   enableUserSelect,
   findSVGAtPoint,
   convertToSvgPoint,
-  getMetadata
+  getMetadata,
+  addFormNode
 } from './utils';
-import { fireEvent } from './event';
+import { setSelectNode } from "./selector";
 
 let _enabled = false;
 let _lineWidth;
@@ -53,8 +54,10 @@ function handleDocumentMousemove(e) {
   }
   let annotation = {
     type: 'line',
-    color: _lineColor,
-    width: _lineWidth,
+    strokeColor: _lineColor,
+    strokeOpacity: 1,
+    strokeWidth: _lineWidth,
+    strokeDasharray: 'none',
     lines
   };
   path = appendChild(svg, annotation);
@@ -74,8 +77,10 @@ function handleDocumentMouseup(e) {
   lines[1] = _ToSvgPoint(svg, e.clientX, e.clientY); // update end point
   let annotation = {
     type: 'line',
-    color: _lineColor,
-    width: _lineWidth,
+    strokeColor: _lineColor,
+    strokeOpacity: 1,
+    strokeWidth: _lineWidth,
+    strokeDasharray: 'none',
     lines
   };
   let { documentId, pageNumber } = getMetadata(svg);
@@ -85,8 +90,7 @@ function handleDocumentMouseup(e) {
       svg.removeChild(path);
     }
     
-    let child = appendChild(svg, annotation);
-    fireEvent('annotation:appendChild', child, {undo : {value: null, str : null }, redo : {value : child, str : JSON.stringify(annotation)}});
+    setSelectNode(addFormNode(documentId, pageNumber, annotation, svg));
   });
 
   document.removeEventListener('mousemove', handleDocumentMousemove);
@@ -128,7 +132,7 @@ function _ToSvgPoint(svg, clientX, clientY) {
  * @param {Number} penSize The size of the lines drawn by the pen, rounded to 2 decimal places
  * @param {String} penColor The color of the lines drawn by the pen
  */
-export function setLine(lineWidth = 1, lineColor = '000000') {
+export function setLine(lineWidth = 1, lineColor = '#FF0000') {
   _lineWidth = Math.round(parseFloat(lineWidth) * 1e2) / 1e2;
   _lineColor = lineColor;
 }

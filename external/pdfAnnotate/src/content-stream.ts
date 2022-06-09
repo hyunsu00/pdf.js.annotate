@@ -353,14 +353,23 @@ export class TextObject extends Operator {
 
         text = text.trim()
 
-        if (text.charAt(0) !== "(" || text.charAt(text.length -1) !== ")") {
-            text = `(${text})`
-        }
-
         if (typeof x_rel !== 'undefined' && typeof y_rel !== 'undefined') {
             this.addOperator("Td", [x_rel, y_rel])
         }
-        this.addOperator("Tj", [text])
+        
+        if (Util.IsASCIIString(text)) {
+            if (text.charAt(0) !== "(" || text.charAt(text.length -1) !== ")") {
+                text = `(${text})`
+            }
+            this.addOperator("Tj", [text])
+        } else {
+            if (text.charAt(0) !== "[" || text.charAt(text.length -1) !== "]") {
+                text = Util.convertStringToUnicodeString(text)
+                text = `[${text}]`
+            }
+
+            this.addOperator("TJ", [text])
+        }
     }
 
     /**
@@ -381,14 +390,23 @@ export class TextObject extends Operator {
 
         text = text.trim()
 
-        if (text.charAt(0) !== "(" || text.charAt(text.length -1) !== ")") {
-            text = `(${text})`
-        }
-
         if (typeof x !== 'undefined' && typeof y !== 'undefined') {
             this.addOperator("Tm", [1, 0, 0, 1, x, y])
         }
-        this.addOperator("Tj", [text])
+
+        if (Util.IsASCIIString(text)) {
+            if (text.charAt(0) !== "(" || text.charAt(text.length -1) !== ")") {
+                text = `(${text})`
+            }
+            this.addOperator("Tj", [text])
+        } else {
+            if (text.charAt(0) !== "[" || text.charAt(text.length -1) !== "]") {
+                text = Util.convertStringToUnicodeString(text)
+                text = `[${text}]`
+            }
+
+            this.addOperator("TJ", [text])
+        }
 
         return this
     }

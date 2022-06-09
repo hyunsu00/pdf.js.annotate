@@ -201,6 +201,55 @@ class Toolbar {
       items.pageNumber.value = pageNumber;
     }
 
+    if(pageNumber <= 1) {
+      this.eventBus.dispatch("updateUi", {
+        eventType : "disable",
+        widgetName : "e_first_slide",
+        value : "",
+      });
+
+      this.eventBus.dispatch("updateUi", {
+        eventType : "disable",
+        widgetName : "e_previous_slide",
+        value : "",
+      });
+    } else {
+      this.eventBus.dispatch("updateUi", {
+        eventType : "enable",
+        widgetName : "e_first_slide",
+        value : "",
+      });
+      this.eventBus.dispatch("updateUi", {
+        eventType : "enable",
+        widgetName : "e_previous_slide",
+        value : "",
+      });
+    }
+
+    if(pageNumber >= pagesCount) {
+      this.eventBus.dispatch("updateUi", {
+        eventType : "disable",
+        widgetName : "e_next_slide",
+        value : "",
+      });
+      this.eventBus.dispatch("updateUi", {
+        eventType : "disable",
+        widgetName : "e_last_slide",
+        value : "",
+      });
+    }else {
+      this.eventBus.dispatch("updateUi", {
+        eventType : "enable",
+        widgetName : "e_next_slide",
+        value : "",
+      });
+      this.eventBus.dispatch("updateUi", {
+        eventType : "enable",
+        widgetName : "e_last_slide",
+        value : "",
+      });
+    }
+    
     items.previous.disabled = pageNumber <= 1;
     items.next.disabled = pageNumber >= pagesCount;
 

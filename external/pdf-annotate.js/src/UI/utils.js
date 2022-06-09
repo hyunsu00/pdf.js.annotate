@@ -1,4 +1,4 @@
-import { getTranslation } from '../render/appendChild';
+import { getTranslation, appendChild } from '../render/appendChild';
 import {
   applyTransform,
   applyInverseTransform,
@@ -6,6 +6,7 @@ import {
   rotate,
   scale
 } from '../utils/mathUtils';
+import { fireEvent } from './event';
 
 export const BORDER_COLOR = '#00BFFF';
 
@@ -275,4 +276,28 @@ export function getMetadata(svg) {
     pageNumber: parseInt(svg.getAttribute('data-pdf-annotate-page'), 10),
     viewport: JSON.parse(svg.getAttribute('data-pdf-annotate-viewport'))
   };
+}
+
+//
+// undo / redo 관련 이벤트
+// 
+export function addFormNode(docId, pageId, annotation, svg) {
+  let childNode = appendChild(svg, annotation);
+  const targetId = annotation.uuid;
+  const undoStr = null;
+  const redoStr = JSON.stringify(annotation);
+  fireEvent('annotation:addForm', docId, pageId, targetId, {undo : {str : undoStr}, redo : {str : redoStr}});
+  return childNode;
+}
+
+export function addChildFormNode(docId, pageId, target, result) {
+  fireEvent('annotation:addChildForm', docId, pageId, target, result);
+}
+
+export function modifyFormNode(docId, pageId, target, result) {
+  fireEvent('annotation:modifyForm', docId, pageId, target, result);
+}
+
+export function removeFormNode(docId, pageId, target, result) {
+  fireEvent('annotation:removeForm', docId, pageId, target, result);
 }

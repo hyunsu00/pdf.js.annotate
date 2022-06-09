@@ -100,7 +100,7 @@ class PDFScriptingManager {
     try {
       this._scripting = this._createScripting();
     } catch (error) {
-      console.error(`PDFScriptingManager.setDocument: "${error?.message}".`);
+      //console.error(`PDFScriptingManager.setDocument: "${error?.message}".`);
 
       await this._destroyScripting();
       return;
@@ -178,7 +178,7 @@ class PDFScriptingManager {
 
       this._eventBus.dispatch("sandboxcreated", { source: this });
     } catch (error) {
-      console.error(`PDFScriptingManager.setDocument: "${error?.message}".`);
+      //console.error(`PDFScriptingManager.setDocument: "${error?.message}".`);
 
       await this._destroyScripting();
       return;

@@ -1032,8 +1032,9 @@ class BaseViewer {
 
   _setScale(value, noScroll = false) {
     let scale = parseFloat(value);
-
+    let sValue;
     if (scale > 0) {
+      sValue = Number(scale).toFixed(2);
       this._setScaleUpdatePages(scale, value, noScroll, /* preset = */ false);
     } else {
       const currentPage = this._pages[this._currentPageNumber - 1];
@@ -1058,18 +1059,23 @@ class BaseViewer {
       const pageHeightScale =
         ((this.container.clientHeight - vPadding) / currentPage.height) *
         currentPage.scale;
+
       switch (value) {
         case "page-actual":
           scale = 1;
+          sValue = Number(scale).toFixed(2);
           break;
         case "page-width":
           scale = pageWidthScale;
+          sValue = "zoom_fit_width";
           break;
         case "page-height":
           scale = pageHeightScale;
+          sValue = "zoom_fit";
           break;
         case "page-fit":
           scale = Math.min(pageWidthScale, pageHeightScale);
+          sValue = Number(scale).toFixed(2);
           break;
         case "auto":
           // For pages in landscape mode, fit the page height to the viewer
@@ -1078,13 +1084,21 @@ class BaseViewer {
             ? pageWidthScale
             : Math.min(pageHeightScale, pageWidthScale);
           scale = Math.min(MAX_AUTO_SCALE, horizontalScale);
+          sValue = Number(scale).toFixed(2);
           break;
         default:
           console.error(`_setScale: "${value}" is an unknown zoom value.`);
           return;
       }
+
       this._setScaleUpdatePages(scale, value, noScroll, /* preset = */ true);
     }
+
+    this.eventBus.dispatch("updateUi", {
+      eventType : "makeUpdateEventAction",
+      widgetName : "e_view_scale",
+      value : sValue,
+    });
   }
 
   /**
@@ -1654,6 +1668,7 @@ class BaseViewer {
         fieldObjectsPromise || this.pdfDocument?.getFieldObjects(),
       mouseState: mouseState || this._scriptingManager?.mouseState,
       annotationCanvasMap,
+      eventBus: this.eventBus,
     });
   }
 

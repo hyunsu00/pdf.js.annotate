@@ -82,7 +82,6 @@ class PDFSidebar {
     this.viewerContainer = elements.viewerContainer;
     this.toggleButton = elements.toggleButton;
 
-    this.thumbnailButton = elements.thumbnailButton;
     this.outlineButton = elements.outlineButton;
     this.attachmentsButton = elements.attachmentsButton;
     this.layersButton = elements.layersButton;
@@ -111,6 +110,58 @@ class PDFSidebar {
     this.attachmentsButton.disabled = false;
     this.layersButton.disabled = false;
     this._currentOutlineItemButton.disabled = true;
+    
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_viewOutline",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_viewOutline",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_viewAttachments",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_viewAttachments",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_viewLayers",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_viewLayers",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_drawn",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_drawn",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_size",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_size",
+      value : false,
+    });
+    this.eventBus.dispatch("updateUi", {
+      eventType : "visible",
+      widgetName : "sidebar_area",
+      value : "",
+    });
+    this.eventBus.dispatch("updateUi", {
+      eventType : "hidden",
+      widgetName : "shape_sidebar_area",
+      value : "",
+    });
+    this.resetAnnotateSidebar();
   }
 
   /**
@@ -149,6 +200,7 @@ class PDFSidebar {
     // If the user has already manually opened the sidebar, immediately closing
     // it would be bad UX; also ignore the "unknown" sidebar view value.
     if (view === SidebarView.NONE || view === SidebarView.UNKNOWN) {
+      this.resetAnnotateSidebar();
       this._dispatchEvent();
       return;
     }
@@ -156,7 +208,57 @@ class PDFSidebar {
     // since `this._switchView` dispatched the event if the view changed.
     if (!this._switchView(view, /* forceOpen */ true)) {
       this._dispatchEvent();
+    } else {
+      switch (view) {
+        case SidebarView.OUTLINE:
+          this.eventBus.dispatch("sidebarButtonStatus", {
+            widgetName : "e_viewsidebar_tab_viewOutline",
+            value : true,
+          });
+          break;
+        case SidebarView.ATTACHMENTS:
+          this.eventBus.dispatch("sidebarButtonStatus", {
+            widgetName : "e_viewsidebar_tab_viewAttachments",
+            value : true,
+          });
+          break;
+        case SidebarView.LAYERS:
+          this.eventBus.dispatch("sidebarButtonStatus", {
+            widgetName : "e_viewsidebar_tab_viewLayers",
+            value : true,
+          });
+          break;
+        default:
+      }
     }
+    this.resetAnnotateSidebar();
+  }
+
+  resetAnnotateSidebar() {
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_drawn",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_drawn",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_size",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_size",
+      value : false,
+    });
+    this.eventBus.dispatch("sidebarButtonStatus", {
+      widgetName : "e_viewsidebar_tab_effect",
+      value : false,
+    });
+    this.eventBus.dispatch("setEnable", {
+      widgetName : "e_viewsidebar_tab_effect",
+      value : false,
+    });
   }
 
   /**
@@ -213,10 +315,6 @@ class PDFSidebar {
     this.active = view;
 
     // Update the CSS classes, for all buttons...
-    this.thumbnailButton.classList.toggle(
-      "toggled",
-      view === SidebarView.THUMBS
-    );
     this.outlineButton.classList.toggle(
       "toggled",
       view === SidebarView.OUTLINE
@@ -227,7 +325,6 @@ class PDFSidebar {
     );
     this.layersButton.classList.toggle("toggled", view === SidebarView.LAYERS);
     // ... and for all views.
-    this.thumbnailView.classList.toggle("hidden", view !== SidebarView.THUMBS);
     this.outlineView.classList.toggle("hidden", view !== SidebarView.OUTLINE);
     this.attachmentsView.classList.toggle(
       "hidden",
@@ -263,7 +360,7 @@ class PDFSidebar {
     this.toggleButton.classList.add("toggled");
     this.toggleButton.setAttribute("aria-expanded", "true");
 
-    this.outerContainer.classList.add("sidebarMoving", "sidebarOpen");
+    this.outerContainer.classList.add("thumbnailsidebarOpen");
 
     if (this.active === SidebarView.THUMBS) {
       this._updateThumbnailViewer();
@@ -272,6 +369,11 @@ class PDFSidebar {
     this._dispatchEvent();
 
     this._hideUINotification();
+
+    this.eventBus.dispatch("makeUpdateEventAction", {
+      widgetName : "document_window",
+      value : "on",
+    });
   }
 
   close() {
@@ -281,12 +383,15 @@ class PDFSidebar {
     this.isOpen = false;
     this.toggleButton.classList.remove("toggled");
     this.toggleButton.setAttribute("aria-expanded", "false");
-
-    this.outerContainer.classList.add("sidebarMoving");
-    this.outerContainer.classList.remove("sidebarOpen");
+    this.outerContainer.classList.remove("thumbnailsidebarOpen");
 
     this._forceRendering();
     this._dispatchEvent();
+
+    this.eventBus.dispatch("makeUpdateEventAction", {
+      widgetName : "document_window",
+      value : "off",
+    });
   }
 
   toggle() {
@@ -384,11 +489,6 @@ class PDFSidebar {
       this.toggle();
     });
 
-    // Buttons for switching views.
-    this.thumbnailButton.addEventListener("click", () => {
-      this.switchView(SidebarView.THUMBS);
-    });
-
     this.outlineButton.addEventListener("click", () => {
       this.switchView(SidebarView.OUTLINE);
     });
@@ -428,6 +528,11 @@ class PDFSidebar {
     this.eventBus._on("outlineloaded", evt => {
       onTreeLoaded(evt.outlineCount, this.outlineButton, SidebarView.OUTLINE);
 
+      this.eventBus.dispatch("setEnable", {
+        widgetName : "e_viewsidebar_tab_viewOutline",
+        value : evt.outlineCount,
+      });
+
       evt.currentOutlineItemPromise.then(enabled => {
         if (!this.isInitialViewSet) {
           return;
@@ -442,10 +547,20 @@ class PDFSidebar {
         this.attachmentsButton,
         SidebarView.ATTACHMENTS
       );
+
+      this.eventBus.dispatch("setEnable", {
+        widgetName : "e_viewsidebar_tab_viewAttachments",
+        value : evt.attachmentsCount,
+      });
     });
 
     this.eventBus._on("layersloaded", evt => {
       onTreeLoaded(evt.layersCount, this.layersButton, SidebarView.LAYERS);
+
+      this.eventBus.dispatch("setEnable", {
+        widgetName : "e_viewsidebar_tab_viewLayers",
+        value : evt.layersCount,
+      });
     });
 
     // Update the thumbnailViewer, if visible, when exiting presentation mode.

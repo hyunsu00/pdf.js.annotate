@@ -1,20 +1,27 @@
-import PDFJSAnnotate from '../PDFJSAnnotate';
+﻿import PDFJSAnnotate from '../PDFJSAnnotate';
 import { appendChild } from '../render/appendChild';
 import {
   disableUserSelect,
   enableUserSelect,
   findSVGAtPoint,
   getMetadata,
-  convertToSvgPoint
+  convertToSvgPoint,
+  addFormNode,
+  addChildFormNode
 } from './utils';
 import { fireEvent } from './event';
+import { setSelectNode } from './selector';
 
 let _enabled = false;
 let _candraw = false;
 let _penSize;
 let _penColor;
+let _annotationId = null;
+let _pageId = null;
+
 let path;
 let lines = [];
+
 
 /**
  * Handle document.touchdown or document.pointerdown event
@@ -41,23 +48,66 @@ function handleDocumentPointerup(e) {
 
 function saveToStorage(x, y) {
   _candraw = false;
-  let svg;
-  if (lines.length > 1 && (svg = findSVGAtPoint(x, y))) {
-    let { documentId, pageNumber } = getMetadata(svg);
-    PDFJSAnnotate.getStoreAdapter().addAnnotation(documentId, pageNumber, {
-      type: 'drawing',
-      width: _penSize,
-      color: _penColor,
-      lines
-    }).then((annotation) => {
-      if (path) {
-        svg.removeChild(path);
-      }
 
-      let child = appendChild(svg, annotation);
-      fireEvent('annotation:appendChild', child, {undo : {value: null, str : null }, redo : {value : child, str : JSON.stringify(annotation)}});
+  if (lines.length <= 1) {
+    return;
+  }
+  let svg = findSVGAtPoint(x, y);
+  if (!svg) {
+    return;
+  }
+
+  let { documentId, pageNumber } = getMetadata(svg);
+  let storeAdapter = PDFJSAnnotate.getStoreAdapter();
+
+  if (!_annotationId) {
+    storeAdapter.addAnnotation(documentId, pageNumber, {
+      type: 'drawing',
+      strokeWidth: _penSize,
+      strokeColor: _penColor,
+      strokeOpacity: 1,
+      strokeDasharray: 'none',
+      paths: [lines, ]
+    }).then((annotation) => {
+      _annotationId = annotation.uuid;
+      _pageId = annotation.page;
+      if (path) {
+        path.parentNode.removeChild(path);
+      }
+      addFormNode(documentId, pageNumber, annotation, svg);
+    });
+  } else {
+    let target = svg.querySelector('[data-pdf-annotate-id="' + _annotationId + '"]');
+    if (target) {
+      {
+        // 부모노드(svg)로 부터 제거
+        path.parentNode.removeChild(path);
+        // 패스의 그리기 좌표 제외한 모든 속성 삭제
+        {
+          let drawnValue = path.getAttribute('d');
+          while(path.attributes.length > 0) {
+            path.removeAttribute(path.attributes[0].name);
+          }
+          path.setAttribute('d', drawnValue);    
+        }
+        // 부모노드(g)에 패스 추가
+        target.appendChild(path);
+      }
+    }
+
+    storeAdapter.getAnnotation(documentId, _annotationId).then((annotation) => {
+      const targetId = annotation.uuid;
+      const undoStr = JSON.stringify(annotation);
+      {
+        annotation.paths.push(lines);
+        storeAdapter.editAnnotation(documentId, _annotationId, annotation);  
+      }
+      const redoStr = JSON.stringify(annotation);
+
+      addChildFormNode(documentId, pageNumber, targetId, {undo : {str : undoStr}, redo : {str : redoStr}});
     });
   }
+  
 }
 
 /**
@@ -113,13 +163,15 @@ function savePoint(x, y) {
   }
 
   if (path) {
-    svg.removeChild(path);
+    path.parentNode.removeChild(path);
   }
 
   path = appendChild(svg, {
-    type: 'drawing',
-    color: _penColor,
-    width: _penSize,
+    type: 'path',
+    strokeColor: _penColor,
+    strokeOpacity: 1,
+    strokeWidth: _penSize,
+    strokeDasharray: 'none',
     lines
   });
 }
@@ -142,8 +194,8 @@ export function setPen(penSize = 1, penColor = '000000') {
  */
 export function getPen() {
   return {
-    size: _penSize,
-    color: _penColor
+    strokeWidth: _penSize,
+    strokeColor: _penColor
   };
 }
 
@@ -156,6 +208,7 @@ export function enablePen() {
   }
 
   _enabled = true;
+  
   // Chrome and Firefox has different behaviors with how pen works, so we need different events.
   document.addEventListener('pointerdown', handleDocumentPointerdown);
   document.addEventListener('pointermove', handleDocumentPointermove);
@@ -173,7 +226,18 @@ export function disablePen() {
     return;
   }
 
+  // 펜종료시 그려진 펜을 선택한다.
+  if (_pageId && _annotationId) {
+    const svg = document.querySelector(`svg[data-pdf-annotate-page="${_pageId}"]`);
+    if (svg) {
+      setSelectNode(svg.querySelector('[data-pdf-annotate-id="' + _annotationId + '"]'));
+    }
+  }
+
   _enabled = false;
+  _annotationId = null;
+  _pageId = null;
+
   document.removeEventListener('pointerdown', handleDocumentPointerdown);
   document.removeEventListener('pointermove', handleDocumentPointermove);
   document.removeEventListener('pointerup', handleDocumentPointerup);

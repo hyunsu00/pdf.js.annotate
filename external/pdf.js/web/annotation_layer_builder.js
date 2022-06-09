@@ -60,6 +60,7 @@ class AnnotationLayerBuilder {
     fieldObjectsPromise = null,
     mouseState = null,
     annotationCanvasMap = null,
+    eventBus = null,
   }) {
     this.pageDiv = pageDiv;
     this.pdfPage = pdfPage;
@@ -74,6 +75,7 @@ class AnnotationLayerBuilder {
     this._fieldObjectsPromise = fieldObjectsPromise;
     this._mouseState = mouseState;
     this._annotationCanvasMap = annotationCanvasMap;
+    this.eventBus = eventBus;
 
     this.div = null;
     this._cancelled = false;
@@ -98,6 +100,7 @@ class AnnotationLayerBuilder {
     }
 
     const parameters = {
+      eventBus : this.eventBus,
       viewport: viewport.clone({ dontFlip: true }),
       div: this.div,
       annotations,

@@ -244,8 +244,12 @@ export class FreeTextAnnotationObj extends MarkupAnnotationObj implements FreeTe
         xobj.contentStream = cs
         let cmo = cs.addMarkedContentObject(["/Tx"])
         let go = cmo.addGraphicObject()
-        go.setFillColor(this.color)
-        go.fillRect(this.rect[0], this.rect[1], this.rect[2], this.rect[3])
+
+        // color 가 입력되지 않는다면, Text Annotation 은 배경색을 칠하지 않는다.
+        if (this.color !== undefined) {
+            go.setFillColor(this.color)
+            go.fillRect(this.rect[0], this.rect[1], this.rect[2], this.rect[3])
+        }
         let to = go.addTextObject()
 
         to.setColor(this.textColor)

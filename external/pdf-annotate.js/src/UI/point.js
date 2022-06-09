@@ -4,9 +4,10 @@ import {
   BORDER_COLOR,
   findSVGAtPoint,
   getMetadata,
-  scaleDown
+  scaleDown,
+  addFormNode
 } from './utils';
-import { fireEvent } from './event';
+import { setSelectNode } from "./selector";
 
 let _enabled = false;
 let input;
@@ -71,10 +72,17 @@ function savePoint() {
       return;
     }
 
+    let dataString = new Date();
     let rect = svg.getBoundingClientRect();
     let { documentId, pageNumber } = getMetadata(svg);
     let annotation = Object.assign({
-      type: 'point'
+      type: 'point',
+      fillColor: '#FFFF00',
+      fillOpacity: 1,
+      strokeColor: '#000000',
+      strokeOpacity: 1,
+      strokeWidth: 1,
+      strokeDasharray: 'none'
     }, scaleDown(svg, {
       x: clientX - rect.left,
       y: clientY - rect.top
@@ -85,11 +93,11 @@ function savePoint() {
         PDFJSAnnotate.getStoreAdapter().addComment(
           documentId,
           annotation.uuid,
-          content
+          content,
+          dataString
         );
-
-        let child = appendChild(svg, annotation);
-        fireEvent('annotation:appendChild', child, {undo : {value: null, str : null }, redo : {value : child, str : JSON.stringify(annotation)}});
+        // true 상태 일경우 다음 click 이벤트가 호출되어도 셀렉션이 해제되지 않도록 한다. 디폴트는 false
+        setSelectNode(addFormNode(documentId, pageNumber, annotation, svg), true);
       });
   }
 

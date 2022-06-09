@@ -80,7 +80,6 @@
   --toolbarButton-openFile-icon: url(images/toolbarButton-openFile.svg);
   --toolbarButton-download-icon: url(images/toolbarButton-download.svg);
   --toolbarButton-bookmark-icon: url(images/toolbarButton-bookmark.svg);
-  --toolbarButton-viewThumbnail-icon: url(images/toolbarButton-viewThumbnail.svg);
   --toolbarButton-viewOutline-icon: url(images/toolbarButton-viewOutline.svg);
   --toolbarButton-viewAttachments-icon: url(images/toolbarButton-viewAttachments.svg);
   --toolbarButton-viewLayers-icon: url(images/toolbarButton-viewLayers.svg);
@@ -233,7 +232,7 @@ select {
   position: relative;
 }
 
-#sidebarContainer {
+#thumbnailContainer {
   position: absolute;
   top: 32px;
   bottom: 0;
@@ -244,14 +243,73 @@ select {
   transition-duration: var(--sidebar-transition-duration);
   transition-timing-function: var(--sidebar-transition-timing-function);
 }
-html[dir="ltr"] #sidebarContainer {
+html[dir="ltr"] #thumbnailContainer {
   transition-property: left;
-  left: calc(0px - var(--sidebar-width));
+  left: 0;
+  border-right: var(--doorhanger-border-color-whcm);
+}
+html[dir="rtl"] #thumbnailContainer {
+  transition-property: right;
+  right: 0;
+  border-left: var(--doorhanger-border-color-whcm);
+}
+
+#outerContainer.sidebarResizing #thumbnailContainer {
+  transition-duration: 0s;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+}
+
+#outerContainer.thumbnailsidebarMoving #thumbnailContainer,
+#outerContainer.thumbnailsidebarOpen #thumbnailContainer {
+  visibility: visible;
+}
+html[dir="ltr"] #outerContainer.thumbnailsidebarOpen #thumbnailContainer {
+  left: 0;
+}
+html[dir="rtl"] #outerContainer.thumbnailsidebarOpen #thumbnailContainer {
+  right: 0;
+}
+
+#thumbnailContent {
+  top: 0;
+  bottom: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  position: absolute;
+  width: 100%;
+  background-color:#ececec;
+}
+html[dir="ltr"] #thumbnailContent {
+  left: 0;
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25);
+}
+html[dir="rtl"] #thumbnailContent {
+  right: 0;
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.25);
+}
+
+#sidebarContainer {
+  position: absolute;
+  top: 32px;
+  bottom: 0;
+  width: var(--sidebar-width);
+  visibility: hidden;
+  z-index: 100;
+  color:#333; background-color:#f8f8f8;
+  border-left:1px solid #ccc; 
+  transition-duration: var(--sidebar-transition-duration);
+  transition-timing-function: var(--sidebar-transition-timing-function);
+}
+html[dir="ltr"] #sidebarContainer {
+  transition-property: right;
+  left: calc(100px - 202px);
   border-right: var(--doorhanger-border-color-whcm);
 }
 html[dir="rtl"] #sidebarContainer {
-  transition-property: right;
-  right: calc(0px - var(--sidebar-width));
+  transition-property: left;
+  right: calc(0px - 202px);
   border-left: var(--doorhanger-border-color-whcm);
 }
 
@@ -267,10 +325,10 @@ html[dir="rtl"] #sidebarContainer {
   visibility: visible;
 }
 html[dir="ltr"] #outerContainer.sidebarOpen #sidebarContainer {
-  left: 0;
+  left: calc(100% - 202px);
 }
 html[dir="rtl"] #outerContainer.sidebarOpen #sidebarContainer {
-  right: 0;
+  right: calc(100% - 202px);
 }
 
 #mainContainer {
@@ -283,13 +341,13 @@ html[dir="rtl"] #outerContainer.sidebarOpen #sidebarContainer {
 }
 
 #sidebarContent {
-  top: 32px;
+  top: 0;
   bottom: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   position: absolute;
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: #f8f8f8;
 }
 html[dir="ltr"] #sidebarContent {
   left: 0;
@@ -321,13 +379,13 @@ html[dir="rtl"] #sidebarContent {
 }
 
 html[dir="ltr"]
-  #outerContainer.sidebarOpen
+  #outerContainer.thumbnailsidebarOpen
   #viewerContainer:not(.pdfPresentationMode) {
   transition-property: left;
   left: var(--sidebar-width);
 }
 html[dir="rtl"]
-  #outerContainer.sidebarOpen
+  #outerContainer.thumbnailsidebarOpen
   #viewerContainer:not(.pdfPresentationMode) {
   transition-property: right;
   right: var(--sidebar-width);
@@ -346,10 +404,15 @@ html[dir="rtl"]
 }
 
 #toolbarSidebar {
+  position: absolute;
   width: 100%;
   height: 32px;
-  background-color: var(--sidebar-toolbar-bg-color);
+  bottom: 0;
+  background-color: #f8f8f8;
+  border-bottom:1px solid #e0e0e0;
+  border-right:1px solid #e0e0e0;
 }
+
 html[dir="ltr"] #toolbarSidebar {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.15),
     0 0 1px rgba(0, 0, 0, 0.1);
@@ -1074,11 +1137,6 @@ html[dir="rtl"] .toolbarButton#secondaryToolbarToggle::before {
   mask-image: var(--toolbarButton-bookmark-icon);
 }
 
-#viewThumbnail.toolbarButton::before {
-  -webkit-mask-image: var(--toolbarButton-viewThumbnail-icon);
-  mask-image: var(--toolbarButton-viewThumbnail-icon);
-}
-
 #viewOutline.toolbarButton::before {
   -webkit-mask-image: var(--toolbarButton-viewOutline-icon);
   mask-image: var(--toolbarButton-viewOutline-icon);
@@ -1775,8 +1833,10 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
 @media print {
   /* General rules for printing. */
   body {
+    overflow:visible;
     background: rgba(0, 0, 0, 0) none;
   }
+  body > #wrap {height:auto;}
 
   /* Rules for browsers that don't support mozPrintCallback. */
   #sidebarContainer,
@@ -1825,6 +1885,9 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
   body[data-pdfjsprinting] #printContainer {
     display: block;
   }
+  #container,
+  #document,
+  .edit_area,
   #printContainer {
     height: 100%;
   }
@@ -1885,6 +1948,13 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
 @media all and (max-width: 840px) {
   #sidebarContainer {
     background-color: var(--sidebar-narrow-bg-color);
+  }
+
+  html[dir="ltr"] #outerContainer.thumbnailsidebarOpen #viewerContainer {
+    left: 0 !important;
+  }
+  html[dir="rtl"] #outerContainer.thumbnailsidebarOpen #viewerContainer {
+    right: 0 !important;
   }
 
   html[dir="ltr"] #outerContainer.sidebarOpen #viewerContainer {

@@ -1,4 +1,4 @@
-import createScreenReaderOnly from './createScreenReaderOnly';
+﻿import createScreenReaderOnly from './createScreenReaderOnly';
 import insertElementWithinChildren from './insertElementWithinChildren';
 import insertElementWithinElement from './insertElementWithinElement';
 import renderScreenReaderComments from './renderScreenReaderComments';
@@ -16,52 +16,60 @@ export default function insertScreenReaderHint(annotation, num = 0) {
   switch (annotation.type) {
     case 'highlight':
     case 'strikeout':
-      let rects = annotation.rectangles;
-      let first = rects[0];
-      let last = rects[rects.length - 1];
+      {
+        let rects = annotation.rectangles;
+        let first = rects[0];
+        let last = rects[rects.length - 1];
 
-      insertElementWithinElement(
-        createScreenReaderOnly(`Begin ${annotation.type} annotation ${num}`, annotation.uuid),
-        first.x, first.y, annotation.page, true
-      );
+        insertElementWithinElement(
+          createScreenReaderOnly(`Begin ${annotation.type} annotation ${num}`, annotation.uuid),
+          first.x, first.y, annotation.page, true
+        );
 
-      insertElementWithinElement(
-        createScreenReaderOnly(`End ${annotation.type} annotation ${num}`, `${annotation.uuid}-end`),
-        last.x + last.width, last.y, annotation.page, false
-      );
+        insertElementWithinElement(
+          createScreenReaderOnly(`End ${annotation.type} annotation ${num}`, `${annotation.uuid}-end`),
+          last.x + last.width, last.y, annotation.page, false
+        );  
+      }
       break;
-
     case 'textbox':
     case 'point':
-      let text = annotation.type === 'textbox' ? ` (content: ${annotation.content})` : '';
+      {
+        let text = annotation.type === 'textbox' ? ` (content: ${annotation.content})` : '';
 
-      insertElementWithinChildren(
-        createScreenReaderOnly(`${annotation.type} annotation ${num}${text}`, annotation.uuid),
-        annotation.x, annotation.y, annotation.page
-      );
+        insertElementWithinChildren(
+          createScreenReaderOnly(`${annotation.type} annotation ${num}${text}`, annotation.uuid),
+          annotation.x, annotation.y, annotation.page
+        );
+      }
       break;
-
-    case 'drawing':
+    case 'drawing':  
+      console.log('[insertScreenReaderHint()] : drawing 구현 요망');
+      break;
+    case 'path':
     case 'area':
-      let x = typeof annotation.x !== 'undefined' ? annotation.x : annotation.lines[0][0];
-      let y = typeof annotation.y !== 'undefined' ? annotation.y : annotation.lines[0][1];
+      {
+        let x = typeof annotation.x !== 'undefined' ? annotation.x : annotation.lines[0][0];
+        let y = typeof annotation.y !== 'undefined' ? annotation.y : annotation.lines[0][1];
 
-      insertElementWithinChildren(
-        createScreenReaderOnly(`Unlabeled drawing`, annotation.uuid),
-        x, y, annotation.page
-      );
+        insertElementWithinChildren(
+          createScreenReaderOnly(`Unlabeled drawing`, annotation.uuid),
+          x, y, annotation.page
+        );  
+      }
       break;
-
     case 'circle':
     case 'fillcircle':
     case 'emptycircle':
-      let x2 = typeof annotation.cx !== 'undefined' ? annotation.cx : annotation.lines[0][0];
-      let y2 = typeof annotation.cy !== 'undefined' ? annotation.cy : annotation.lines[0][1];
+      {
+        let x2 = typeof annotation.cx !== 'undefined' ? annotation.cx : annotation.lines[0][0];
+        let y2 = typeof annotation.cy !== 'undefined' ? annotation.cy : annotation.lines[0][1];
 
-      insertElementWithinChildren(
-        createScreenReaderOnly(`Unlabeled drawing`, annotation.uuid),
-        x2, y2, annotation.page
-      );
+        insertElementWithinChildren(
+          createScreenReaderOnly(`Unlabeled drawing`, annotation.uuid),
+          x2, y2, annotation.page
+        );
+      }
       break;
   }
 

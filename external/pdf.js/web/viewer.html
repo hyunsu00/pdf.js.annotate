@@ -75,9 +75,6 @@ See https://github.com/adobe-type-tools/cmap-resources
         <div id="toolbarSidebar">
           <div id="toolbarSidebarLeft">
             <div class="splitToolbarButton toggled">
-              <button id="viewThumbnail" class="toolbarButton toggled" title="Show Thumbnails" tabindex="2" data-l10n-id="thumbs">
-                 <span data-l10n-id="thumbs_label">Thumbnails</span>
-              </button>
               <button id="viewOutline" class="toolbarButton" title="Show Document Outline (double-click to expand/collapse all items)" tabindex="3" data-l10n-id="document_outline">
                  <span data-l10n-id="document_outline_label">Document Outline</span>
               </button>
@@ -101,8 +98,6 @@ See https://github.com/adobe-type-tools/cmap-resources
           </div>
         </div>
         <div id="sidebarContent">
-          <div id="thumbnailView">
-          </div>
           <div id="outlineView" class="hidden">
           </div>
           <div id="attachmentsView" class="hidden">
@@ -112,7 +107,13 @@ See https://github.com/adobe-type-tools/cmap-resources
         </div>
         <div id="sidebarResizer"></div>
       </div>  <!-- sidebarContainer -->
-
+      <div id="thumbnailContainer">
+        <div id="thumbnailContent">
+          <div id="thumbnailView"></div>
+        </div>
+        <div id="sidebarResizer"></div>
+      </div>
+      <!-- thumbnailContainer -->
       <div id="mainContainer">
         <div class="findbar hidden doorHanger" id="findbar">
           <div id="findbarInputContainer">

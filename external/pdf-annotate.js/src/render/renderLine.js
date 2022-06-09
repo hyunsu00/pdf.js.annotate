@@ -1,4 +1,4 @@
-import setAttributes from '../utils/setAttributes';
+﻿import setAttributes from '../utils/setAttributes';
 import normalizeColor from '../utils/normalizeColor';
 
 /**
@@ -11,22 +11,26 @@ import normalizeColor from '../utils/normalizeColor';
 export default function renderLine(a) {
   let group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   setAttributes(group, {
-    stroke: normalizeColor(a.color || '#f00'),
-    strokeWidth: 1
+    stroke: normalizeColor(a.strokeColor),
+    strokeOpacity: a.strokeOpacity,
+    strokeWidth: a.strokeWidth,
+    strokeDasharray: a.strokeDasharray
   });
 
-  a.rectangles.forEach((r) => {
+  if (a.lines.length === 2) {
     let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
 
+    let p1 = a.lines[0];
+    let p2 = a.lines[a.lines.length - 1];
     setAttributes(line, {
-      x1: r.x,
-      y1: r.y,
-      x2: r.x + r.width,
-      y2: r.y
+      x1: p1[0],
+      y1: p1[1],
+      x2: p2[0],
+      y2: p2[1]
     });
 
     group.appendChild(line);
-  });
+  }
 
   return group;
 }
